@@ -1,7 +1,7 @@
 <template>
   <div id="menuButton">
     <div class="title">菜单管理</div>
-    <div>
+    <div class="headerBtnRight">
       <el-button
         size="small"
         type="primary"

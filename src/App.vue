@@ -17,6 +17,9 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   color:#333333;
 }
+body .el-table th.gutter{
+display: table-cell!important;
+}
 /* 交换confirmz弹窗确认按钮位置 */
 .btn-custom-confirm{
   float: left !important;
@@ -59,6 +62,13 @@ input{
   border-top-right-radius: 20px;
 }
 /* 抽屉超出滚动 */
+.el-drawer__header span:focus {
+  outline: 0;
+}
+.el-drawer:focus {
+  outline: 0;
+}
+
 .el-drawer__open .el-drawer.rtl{
   overflow-y: auto;
 }
@@ -72,5 +82,57 @@ input{
   display: block;
   float: left;
   cursor: pointer;
+}
+.headerBtn .el-input--small .el-input__inner{
+  height: 36px;
+  line-height: 36px;
+}
+.headerBtn .el-input--small .el-input__icon{
+  line-height: 36px;
+}
+.headerBtn .el-range-editor--small.el-input__inner{
+  height: 36px;
+}
+/* 按钮icon文字居中 */
+.headerBtnRight .el-button span{
+  display: flex;
+  align-items: center;
+}
+.headerBtnRight .el-button span .iconfont{
+  margin-right: 4px
+}
+/* 更改tree组件icon */
+.el-tree .el-tree-node__expand-icon.expanded {
+  -webkit-transform: rotate(0deg);
+  transform: rotate(0deg);
+}
+/* 有子节点 且未展开 */
+.el-tree .el-icon-caret-right:before {
+  background: url("./assets/images/fold_icon.svg") no-repeat 0 0;
+  content: "";
+  display: block;
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  background-size: 14px;
+}
+/* 有子节点 且已展开 */
+.el-tree .el-tree-node__expand-icon.expanded.el-icon-caret-right:before {
+  background: url("./assets/images/unfold_icon.svg") no-repeat 0 0;
+  content: "";
+  display: block;
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  background-size: 14px;
+}
+.el-tree .el-tree-node__expand-icon.is-leaf::before {
+  background: url("./assets/images/file_icon.svg") no-repeat 0 0;
+  content: "";
+  display: block;
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  background-size: 14px;
 }
 </style>

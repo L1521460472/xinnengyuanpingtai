@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getCookie } from '../public'
+import { getCookie ,removeCookie} from '../public'
 import router from '../router/index'
 import { Message } from 'element-ui'
 
@@ -15,18 +15,19 @@ service.interceptors.request.use(config => {
   }
   return config
 }, error => {
-  Promise.reject(error)
+    return Promise.reject(error)
 })
 
 // 返回拦截器
 service.interceptors.response.use(config => {
   if (config.data.status == 3) {
-    Message({
-      type: 'warning',
-      message: config.data.message,
-      center: true
-    })
+    // Message({
+    //   type: 'warning',
+    //   message: config.data.message,
+    //   center: true
+    // })
     router.replace('/')
+    return config
     // parent.location.href = '/'
   } else {
     return config

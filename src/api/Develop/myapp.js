@@ -39,9 +39,7 @@ export const deleteAppliction =(params) => {
   return request({
     url: '/enterprise-business-service/enterpriseAccountApp/deleteById',
     method: 'delete',
-    params: {
-      enterpriseAccountAppId: params
-    }
+    params: params
   })
 }
 

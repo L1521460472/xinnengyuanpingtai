@@ -87,6 +87,9 @@
             <div class="bannerCenterBoxTTText" @click="type = 18;isBosDisable = true;isTitleDisable = false;isContentDisable = false;" v-if="istype18">
               <div>{{ form.descOne }}</div>
             </div>
+            <div class="bannerCenterBoxTTText" @click="type = 42;isBosDisable = true;isTitleDisable = false;isContentDisable = false;" v-if="istype42">
+              <div>{{ form.descChangeOne }}</div>
+            </div>
             <div class="bannerCenterBoxTTImage" @click="type = 19;isBosDisable = true;isTitleDisable = false;isContentDisable = false;" v-if="istype19">
               <!-- <img :src="imageUrl" class="avatar"> -->
               <el-image style="width: 375px; height: 212px" :src="imageUrlOne" fit="fill">
@@ -115,6 +118,11 @@
           <div id="bannerCenterBoxTT" class="bannerCenterBoxTT" v-if="isBoxTTSMS" :class="{ boxactive: isBosDisable }">
             <div class="bannerCenterBoxTTText" @click="type = 22;isBosDisable = true;isTitleDisable = false;isContentDisable = false;" v-if="istype22">
               <div>{{ form.descSMS }}</div>
+            </div>
+          </div>
+          <div id="bannerCenterBoxTT" class="bannerCenterBoxTT" v-if="isBoxTTSMS" :class="{ boxactive: isBosDisable }">
+            <div class="bannerCenterBoxTTText" @click="type = 43;isBosDisable = true;isTitleDisable = false;isContentDisable = false;" v-if="istype43">
+              <div>{{ form.descChangeSMS }}</div>
             </div>
           </div>
           <div v-if="isTemplateShow" class="bannerCenterBoxR">
@@ -168,7 +176,7 @@
             </div>
             <div class="navBlock">*业务类型</div>
             <div class="navInput">
-              <el-select v-model="businessValue" size="small" placeholder="请选择">
+              <el-select v-model="businessValue" size="small" placeholder="请选择" @change="handleApp">
                 <el-option v-for="item in businessOptions" :key="item.id" :label="item.name" :value="item.id">
                 </el-option>
               </el-select>
@@ -182,7 +190,7 @@
             </div>
             <div class="navBlock">*选择应用</div>
             <div class="navInput">
-              <el-select v-model="appValue" size="small" placeholder="请选择">
+              <el-select v-model="appValue" size="small" placeholder="请选择" @change="handleApp">
                 <el-option v-for="item in appOptions" :key="item.id" :label="item.name" :value="item.id">
                 </el-option>
               </el-select>
@@ -766,6 +774,28 @@
             </span>
             <div class="msgMain2">
               <el-input type="textarea" ref="targetIn" placeholder="在此输入文本内容…" v-model="form.descChange" maxlength="9999" show-word-limit @focus="handleInputChange"></el-input>
+            </div>
+          </div>
+        </div>
+        <div class="grid-content bannerRight" v-if="type == 42">
+          <div class="navTitle">内容文本</div>
+          <div class="bannerRightMsg">
+            <span class="msgYes">
+              <el-button size="small" @click="handleAddChangeOne" type="primary">添加变量</el-button>
+            </span>
+            <div class="msgMain2">
+              <el-input type="textarea" ref="targetInOne" placeholder="在此输入文本内容…" v-model="form.descChangeOne" maxlength="9999" show-word-limit @focus="handleInputChangeOne"></el-input>
+            </div>
+          </div>
+        </div>
+        <div class="grid-content bannerRight" v-if="type == 43">
+          <div class="navTitle">内容文本</div>
+          <div class="bannerRightMsg">
+            <span class="msgYes">
+              <el-button size="small" @click="handleAddChangeSMS" type="primary">添加变量</el-button>
+            </span>
+            <div class="msgMain2">
+              <el-input type="textarea" ref="targetInSMS" placeholder="在此输入文本内容…" v-model="form.descChangeSMS" maxlength="9999" show-word-limit @focus="handleInputChangeSMS"></el-input>
             </div>
           </div>
         </div>

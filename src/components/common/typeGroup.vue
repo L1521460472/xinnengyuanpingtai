@@ -90,7 +90,7 @@
 </template>
 <script>
 import dragTransition from './dragTransition'
-import { updateGroup, getGroupByType, deleteGroup } from '../api/message/media'
+import { updateGroup, getGroupByType, deleteGroup } from '../../api/message/media'
 export default {
   name: 'typeGroup',
   components: {
@@ -124,7 +124,7 @@ export default {
   },
   watch: {
     // viewMoreHeight() {
-      // 
+      //
       // if (this.viewMoreHeight == 37) {
       //   this.muchMore = false
       // }
@@ -152,7 +152,7 @@ export default {
       selectType(val1,val2) {
         this.currentSelect = val1
         this.$emit('select',val1)
-        // 
+        //
       },
       // 打开分组管理弹窗
       manageGroups() {
@@ -182,7 +182,7 @@ export default {
           fileType: this.fileType
         }
         updateGroup(query).then(res => {
-          // 
+          //
           if (res.data.status == 0) {
             this.$message({
               type: 'success',
@@ -231,19 +231,19 @@ export default {
               item.isEdit = false
             })
             // this.types1 = data
-            // 
+            //
             this.$emit('changeTypes', data)
           }
         })
       },
       cancleGruop(){
-        
+
         this.$refs.popover.doClose()
         this.newGroupName = ''
       },
       changeTypes(val) {
         // this.types = val
-        // 
+        //
         this.$emit('changeTypes', val)
       },
       // 修改分组名称
@@ -254,16 +254,16 @@ export default {
         this.isMore = !this.isMore
         // this.$nextTick(() => {
           // const viewMore = document.getElementsByClassName("type-select-left")[this.fileType - 1]
-          // 
+          //
           // this.viewMoreHeight = viewMore.offsetHeight
-          // 
+          //
         // })
       },
       getElementHeight() {
         this.$nextTick(function() {
           const viewMore = document.getElementsByClassName("type-select-left")[this.fileType - 1]
           this.viewMoreHeight = viewMore.offsetHeight
-          // 
+          //
           if(this.viewMoreHeight > 37) {
             this.isMore = true
             this.muchMore = true
@@ -277,7 +277,7 @@ export default {
       },
       // 更新列表数据
       updateList(val){
-        // 
+        //
         this.$emit('updateList', val)
       }
   }

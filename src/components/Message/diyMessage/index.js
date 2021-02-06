@@ -58,18 +58,22 @@ export default {
             istype21: false, //中间1.0确认视频文件时显示
             istype22: false, //中间SMS文本消息显示
             istype41: false, //中间2.4变量消息显示
+            istype42: false, //中间1.0变量消息显示
+            istype43: false, //中间sms变量消息显示
             falg: true, //保存提交审核模板名称是否为空
             flag: false, //音频播放
             flagOne: false, //1.0音频播放
             type: 1, //1. 模板设置 2. 暂无组件 3. 内容文本 4. 底部悬浮菜单 5. 底部回复消息1 6. 底部打开链接1 7. 底部拨打电话1 8. 图片文件 9. 音频文件 10. 视频文件 11. 卡片管理 12. 卡片悬浮菜单
             //13. 卡片回复消息1 14. 卡片打开链接1 15. 卡片拨打电话1 16. 卡片标题 17. 卡片内容 18. up1.0内容 19. up1.0图片 20. up1.0音频 21. up1.0视频 22. sms内容 23. 底部回复消息2
             //24. 底部回复消息3 25. 底部回复消息4 26. 底部打开链接2 27. 底部打开链接3 28. 底部打开链接4 29. 底部拨打电话2 30. 底部拨打电话3 31. 底部拨打电话4 32. 卡片回复消息2
-            //33. 卡片回复消息3 34. 卡片回复消息4 35. 卡片打开链接2 36. 卡片打开链接3 37. 卡片打开链接4 38. 卡片拨打电话2 39. 卡片拨打电话3 40. 卡片拨打电话4
+            //33. 卡片回复消息3 34. 卡片回复消息4 35. 卡片打开链接2 36. 卡片打开链接3 37. 卡片打开链接4 38. 卡片拨打电话2 39. 卡片拨打电话3 40. 卡片拨打电话4 41. 变量消息2.4 42. 变量消息1.0 43. 变量消息sms
             form: {
                 id: "", //消息模板id
                 name: "", //模板名称
                 desc: "", //内容文本
                 descChange: "", //变量文本
+                descChangeOne: "", //变量文本1.0
+                descChangeSMS: "", //变量文本sms
                 cardTitleValue: "", //卡片标题内容
                 cardContentValue: "", //卡片内容文本
                 textImgUrl: "", //缩略图URL
@@ -141,8 +145,10 @@ export default {
             currentpage: 1,
             total: 1, //
             Num: "", //页面编辑累加次数
-            checkStatus:0,//0.未审核 1.审核通过
-            number: 0, //变量N
+            checkStatus: 0,//0.未审核 1.审核通过
+            number: 0, //变量N 2.4
+            numberOne: 0, //变量N 1.0
+            numberSMS: 0, //变量N sms
             cardId: "", //卡片ID
             oneId: "", //up1.0消息 id
             smsId: "", //sms消息 id
@@ -346,20 +352,36 @@ export default {
             } else {
                 this.falg = true;
             }
+            if (this.appValue == '') {
+                this.$message({
+                    type: "warning",
+                    message: "未选择应用!",
+                    center: true,
+                });
+                return
+            }
+            if (this.channelValue == '') {
+                this.$message({
+                    type: "warning",
+                    message: "未选择通道!",
+                    center: true,
+                });
+                return
+            }
             var params = {
                 businessType: this.businessValue, //业务类型
-                channelId:this.channelValue,//通道id
+                channelId: this.channelValue,//通道id
                 content: this.msgValue == 0 ? this.form.desc : this.form.descChange, //文本内容
                 cssContent: "", //文本文件样式数据
-                enterpriseAccountAppId:this.appValue,//企业应用id
+                enterpriseAccountAppId: this.appValue,//企业应用id
                 fallbackDTO: {
-                    content: this.fileIdOne == "" ? this.form.descOne : this.fileIdOne, //回落内容
+                    content: this.fileIdOne != "" ? this.fileIdOne : this.msgValue == 3 ? this.form.descChangeOne : this.descOne, //回落内容
                     id: this.oneId, //回落消息id,更新时必传
                     messageMouldType: this.messageMouldTypeOne, //消息类型：0 文本消息，1 文件消息
                     messageVersion: 1, //消息版本：0 UP2.4消息，1 UP1.0消息，2 SMS消息
                 },
                 smsFallbackDTO: {
-                    content: this.form.descSMS, //回落内容
+                    content: this.msgValue == 3 ? this.form.descChangeSMS : this.form.descSMS, //回落内容
                     id: this.smsId, //回落消息id,更新时必传
                     messageMouldType: 0, //消息类型：0 文本消息，1 文件消息
                     messageVersion: 2, //消息版本：0 UP2.4消息，1 UP1.0消息，2 SMS消息
@@ -368,7 +390,7 @@ export default {
                 id: this.form.id, //主键，更新必传
                 messageFall: this.msgBackValue ? 0 : 1, //消息回落：0开启，1关闭
                 messageFallType: this.messageFallType, //消息回落类型 1 UP1.0消息，2 SMS消息 ，3 UP1.0消息 SMS消息
-                messageType: this.msgValue, //消息类型：0 文本消息，1 文件消息，2 卡片消息
+                messageType: this.msgValue, //消息类型：0 文本消息，1 文件消息，2 卡片消息 3 变量消息
                 messageVersion: this.messageVersion, //消息版本：0 UP2.4消息，1 UP1.0消息，2 SMS消息
                 name: this.form.name, //模板名称
                 productType: this.productType, //产品类型
@@ -542,6 +564,22 @@ export default {
         },
         //文本，文件保存并审核
         async handleSaveAndAudit () {
+            if (this.appValue == '') {
+                this.$message({
+                    type: "warning",
+                    message: "未选择应用!",
+                    center: true,
+                });
+                return
+            }
+            if (this.channelValue == '') {
+                this.$message({
+                    type: "warning",
+                    message: "未选择通道!",
+                    center: true,
+                });
+                return
+            }
             if (this.msgValue == "0") {
                 if (this.form.desc == "") {
                     this.$message({
@@ -601,6 +639,7 @@ export default {
                         message: "up1.0消息内容不能为空!",
                         center: true,
                     });
+                    return;
                 }
                 if (this.form.descSMS == "") {
                     this.$message({
@@ -613,17 +652,17 @@ export default {
             }
             await this.handleSave();
             if (this.falg) {
-                if(this.checkStatus !== 1){
+                if (this.checkStatus !== 1) {
                     saveAndAudit(this.messageMouldId)
-                    .then((res) => {
-                        this.handleBack();
-                    })
-                    .catch((error) => {
-                        this.$message.error({
-                            message: error,
-                            center: true,
+                        .then((res) => {
+                            this.handleBack();
+                        })
+                        .catch((error) => {
+                            this.$message.error({
+                                message: error,
+                                center: true,
+                            });
                         });
-                    });
                 }
             }
         },
@@ -640,20 +679,36 @@ export default {
             } else {
                 this.falg = true;
             }
+            if (this.appValue == '') {
+                this.$message({
+                    type: "warning",
+                    message: "未选择应用!",
+                    center: true,
+                });
+                return
+            }
+            if (this.channelValue == '') {
+                this.$message({
+                    type: "warning",
+                    message: "未选择通道!",
+                    center: true,
+                });
+                return
+            }
             var params = {
                 businessType: this.businessValue, //业务类型
-                channelId:this.channelValue,//通道id
+                channelId: this.channelValue,//通道id
                 content: null, //文本内容
                 cssContent: "", //文本文件样式数据
-                enterpriseAccountAppId:this.appValue,//企业应用id
+                enterpriseAccountAppId: this.appValue,//企业应用id
                 fallbackDTO: {
-                    content: this.fileIdOne == "" ? this.form.descOne : this.fileIdOne, //回落内容
+                    content: this.fileIdOne != "" ? this.fileIdOne : this.msgValue == 3 ? this.form.descChangeOne : this.descOne, //回落内容
                     id: this.oneId, //回落消息id,更新时必传
                     messageMouldType: this.messageMouldTypeOne, //消息类型：0 文本消息，1 文件消息
                     messageVersion: 1, //消息版本：0 UP2.4消息，1 UP1.0消息，2 SMS消息
                 },
                 smsFallbackDTO: {
-                    content: this.form.descSMS, //回落内容
+                    content: this.msgValue == 3 ? this.form.descChangeSMS : this.form.descSMS, //回落内容
                     id: this.smsId, //回落消息id,更新时必传
                     messageMouldType: 0, //消息类型：0 文本消息，1 文件消息
                     messageVersion: 2, //消息版本：0 UP2.4消息，1 UP1.0消息，2 SMS消息
@@ -1008,6 +1063,22 @@ export default {
         },
         //卡片保存并审核
         async handleSaveAndAuditCard () {
+            if (this.appValue == '') {
+                this.$message({
+                    type: "warning",
+                    message: "未选择应用!",
+                    center: true,
+                });
+                return
+            }
+            if (this.channelValue == '') {
+                this.$message({
+                    type: "warning",
+                    message: "未选择通道!",
+                    center: true,
+                });
+                return
+            }
             if (this.fileIdTow == "") {
                 this.$message({
                     type: "warning",
@@ -1077,17 +1148,17 @@ export default {
             }
             await this.handleSaveCard();
             if (this.falg) {
-                if(this.checkStatus !== 1){
+                if (this.checkStatus !== 1) {
                     saveAndAudit(this.messageMouldId)
-                    .then((res) => {
-                        this.handleBack();
-                    })
-                    .catch((error) => {
-                        this.$message.error({
-                            message: error,
-                            center: true,
+                        .then((res) => {
+                            this.handleBack();
+                        })
+                        .catch((error) => {
+                            this.$message.error({
+                                message: error,
+                                center: true,
+                            });
                         });
-                    });
                 }
             }
         },
@@ -1096,6 +1167,8 @@ export default {
             this.form.id = "";
             this.form.desc = "";
             this.form.descChange = "";
+            this.form.descChangeOne = "";
+            this.form.descChangeSMS = "";
             this.form.cardTitleValue = "";
             this.form.cardContentValue = "";
             this.form.textImgUrl = "";
@@ -1229,7 +1302,7 @@ export default {
                         }
                         this.isBoxTTOne = false;
                         this.isBoxTTSMS = false;
-                        if (this.form.desc !== "" || this.fileIdTow !== "") {
+                        if (this.form.desc !== "" || this.fileIdTow !== "" || this.form.descChange !== "") {
                             this.isBoxTT = true;
                         } else {
                             this.isBoxTT = false;
@@ -1266,7 +1339,7 @@ export default {
                         this.moduleImgUrl = require("../../../assets/icon-14px-模板@1x.png");
                         this.isBoxTT = false;
                         this.isBoxTTSMS = false;
-                        if (this.form.descOne !== "" || this.fileIdOne !== "") {
+                        if (this.form.descOne !== "" || this.form.descChangeOne !== "" || this.fileIdOne !== "") {
                             this.isBoxTTOne = true;
                             if (this.istype18) {
                                 this.type = 18;
@@ -1276,6 +1349,8 @@ export default {
                                 this.type = 20;
                             } else if (this.istype21) {
                                 this.type = 21;
+                            } else if (this.istype42) {
+                                this.type = 42;
                             }
                         } else {
                             this.isBoxTTOne = false;
@@ -1306,6 +1381,10 @@ export default {
                             this.isBoxTTSMS = true;
                             this.type = 22;
                             this.istype22 = true;
+                        }else if (this.form.descChangeSMS !== "") {
+                            this.isBoxTTSMS = true;
+                            this.type = 43;
+                            this.istype43 = true;
                         } else {
                             this.isBoxTTSMS = false;
                             this.type = 2;
@@ -1323,8 +1402,8 @@ export default {
             this.fileGroupId = id;
             this.currentpage = 1;
             imageLists({
-                channelId:this.channelValue,
-                enterpriseAccountAppId:this.appValue,
+                channelId: this.channelValue,
+                enterpriseAccountAppId: this.appValue,
                 fileType: 1,
                 fileStatus: 1,
                 fileGroupId: this.fileGroupId == 0 ? null : this.fileGroupId,
@@ -1791,6 +1870,14 @@ export default {
             this.isBoxTT = true;
             this.istype41 = true;
         },
+        handleInputChangeOne () {
+            this.isBoxTTOne = true;
+            this.istype42 = true;
+        },
+        handleInputChangeSMS () {
+            this.isBoxTTSMS = true;
+            this.istype43 = true;
+        },
         //基础组件不聚焦
         handleModule (e) {
             this.isBosDisable = false;
@@ -2244,7 +2331,7 @@ export default {
         },
         //弹框
         async handleNavButton () {
-            if(this.appValue == ''){
+            if (this.appValue == '') {
                 this.$message({
                     type: "warning",
                     message: "应用未选择!",
@@ -2252,7 +2339,7 @@ export default {
                 });
                 return
             }
-            if(this.channelValue == ''){
+            if (this.channelValue == '') {
                 this.$message({
                     type: "warning",
                     message: "通道未选择!",
@@ -2262,7 +2349,7 @@ export default {
             }
             this.checkbox = [];
             if (this.type == 8 || this.type == 19) {
-                await imageGroup({ fileType: 1, fileStatus: 1,channelId:this.channelValue,enterpriseAccountAppId:this.appValue,})
+                await imageGroup({ fileType: 1, fileStatus: 1, channelId: this.channelValue, enterpriseAccountAppId: this.appValue, })
                     .then((res) => {
                         this.groupsList = [{ id: 0, name: "我的图片", total: null }];
                         res.data.data.map((item) => {
@@ -2276,8 +2363,8 @@ export default {
                         });
                     });
                 imageLists({
-                    channelId:this.channelValue,
-                    enterpriseAccountAppId:this.appValue,
+                    channelId: this.channelValue,
+                    enterpriseAccountAppId: this.appValue,
                     fileType: 1,
                     fileStatus: 1,
                     pageSize: 18,
@@ -2298,8 +2385,8 @@ export default {
                     });
             } else if (this.type == 9 || this.type == 20) {
                 imageLists({
-                    channelId:this.channelValue,
-                    enterpriseAccountAppId:this.appValue,
+                    channelId: this.channelValue,
+                    enterpriseAccountAppId: this.appValue,
                     fileType: 2,
                     fileStatus: 1,
                     pageSize: 4,
@@ -2317,8 +2404,8 @@ export default {
                     });
             } else if (this.type == 10 || this.type == 21) {
                 imageLists({
-                    channelId:this.channelValue,
-                    enterpriseAccountAppId:this.appValue,
+                    channelId: this.channelValue,
+                    enterpriseAccountAppId: this.appValue,
                     fileType: 3,
                     fileStatus: 1,
                     pageSize: 4,
@@ -2339,11 +2426,11 @@ export default {
         },
         //图片分页
         handleCurrentChange (val) {
-            
+
             if (this.type == 8) {
                 imageLists({
-                    channelId:this.channelValue,
-                    enterpriseAccountAppId:this.appValue,
+                    channelId: this.channelValue,
+                    enterpriseAccountAppId: this.appValue,
                     fileType: 1,
                     fileStatus: 1,
                     fileGroupId: this.fileGroupId == 0 ? null : this.fileGroupId,
@@ -2362,8 +2449,8 @@ export default {
                     });
             } else if (this.type == 9) {
                 imageLists({
-                    channelId:this.channelId,
-                    enterpriseAccountAppId:this.appValue,
+                    channelId: this.channelId,
+                    enterpriseAccountAppId: this.appValue,
                     fileType: 2,
                     fileStatus: 1,
                     pageSize: 4,
@@ -2381,8 +2468,8 @@ export default {
                     });
             } else if (this.type == 10) {
                 imageLists({
-                    channelId:this.channelId,
-                    enterpriseAccountAppId:this.appValue,
+                    channelId: this.channelId,
+                    enterpriseAccountAppId: this.appValue,
                     fileType: 3,
                     fileStatus: 1,
                     pageSize: 4,
@@ -2424,6 +2511,7 @@ export default {
                 this.fileIdTow = this.checkbox[0];
                 getFile({ fileGroupDetailId: this.checkbox[0] })
                     .then((res) => {
+                        console.log('res: ', res.data);
                         this.imageUrl = res.data.data.fileUrl;
                         this.form.textImgUrl = res.data.data.fileUrl;
                         this.form.textImgType = res.data.data.fileUploadType;
@@ -2780,9 +2868,18 @@ export default {
         handleEdit (val) {
             this.cardCount = null;
         },
-        //添加变量
+        //添加变量2.4
         handleAddChange () {
             const elInput = this.$refs.targetIn.$el.firstElementChild; // 拿到目标标签；
+            this.number = 0;
+            var offset = 0;
+            do {
+                offset = this.form.descChange.indexOf('{ 变量', offset);
+                if (offset != -1) {
+                    this.number++;
+                    offset += '{ 变量'.length;
+                }
+            } while (offset != -1)
             this.number++;
             const str = ` { 变量 ${this.number} } `;
             // 获取el-input的值
@@ -2804,6 +2901,81 @@ export default {
             elInput.focus();
             elInput.selectionStart = startPos + str.length;
             elInput.selectionEnd = startPos + str.length;
+        },
+        //添加变量1.0
+        handleAddChangeOne () {
+            const elInput = this.$refs.targetInOne.$el.firstElementChild; // 拿到目标标签；
+            this.numberOne = 0;
+            var offset = 0;
+            do {
+                offset = this.form.descChangeOne.indexOf('{ 变量', offset);
+                if (offset != -1) {
+                    this.numberOne++;
+                    offset += '{ 变量'.length;
+                }
+            } while (offset != -1)
+            this.numberOne++;
+            const str = ` { 变量 ${this.numberOne} } `;
+            // 获取el-input的值
+            let txt = elInput.value;
+            // 做插入前做长度校验（如果有这个需要的话）
+            // if (txt.length + value.length > 64) {
+            //     return;
+            // }
+            // 获取选区开始位置
+            let startPos = elInput.selectionStart;
+            // 获取选区结束位置
+            let endPos = elInput.selectionEnd;
+            if (startPos === undefined || endPos === undefined) return;
+
+            // 将文本插入光标位置
+            this.form.descChangeOne =
+                txt.substring(0, startPos) + str + txt.substring(endPos);
+            // 将光标移至文本末尾
+            elInput.focus();
+            elInput.selectionStart = startPos + str.length;
+            elInput.selectionEnd = startPos + str.length;
+        },
+        //添加变量sms
+        handleAddChangeSMS () {
+            const elInput = this.$refs.targetInSMS.$el.firstElementChild; // 拿到目标标签；
+            this.numberSMS = 0;
+            var offset = 0;
+            do {
+                offset = this.form.descChangeSMS.indexOf('{ 变量', offset);
+                if (offset != -1) {
+                    this.numberSMS++;
+                    offset += '{ 变量'.length;
+                }
+            } while (offset != -1)
+            this.numberSMS++;
+            const str = ` { 变量 ${this.numberSMS} } `;
+            // 获取el-input的值
+            let txt = elInput.value;
+            // 做插入前做长度校验（如果有这个需要的话）
+            // if (txt.length + value.length > 64) {
+            //     return;
+            // }
+            // 获取选区开始位置
+            let startPos = elInput.selectionStart;
+            // 获取选区结束位置
+            let endPos = elInput.selectionEnd;
+            if (startPos === undefined || endPos === undefined) return;
+
+            // 将文本插入光标位置
+            this.form.descChangeSMS =
+                txt.substring(0, startPos) + str + txt.substring(endPos);
+            // 将光标移至文本末尾
+            elInput.focus();
+            elInput.selectionStart = startPos + str.length;
+            elInput.selectionEnd = startPos + str.length;
+        },
+        //根据业务类型应用获取通道
+        handleApp () {
+            channelList({ enterpriseAccountAppId: this.appValue, businessTypeConfigId: this.businessValue }).then(res => {
+                this.channelOptions = res.data.data;
+                this.channelValue = '';
+            })
         },
         //获取底部菜单按钮详情
         getText () {
@@ -2971,14 +3143,25 @@ export default {
                 }
             } else if (this.text == "UP1.0消息") {
                 if (data == 0) {
-                    this.centerImgUrl = require("../../../assets/images1/正文.svg");
-                    this.contentStatus = 102;
-                    this.isContent = false;
-                    this.isBosDisable = true;
-                    this.type = 18;
-                    this.istype18 = true;
-                    this.messageMouldTypeOne = 0;
-                    this.fileIdOne = "";
+                    if(this.msgValue == 3){
+                        this.centerImgUrl = require("../../../assets/icon-32px-正文@1x.png");
+                        this.contentStatus = 102;
+                        this.isContent = false;
+                        this.isBosDisable = true;
+                        this.type = 42;
+                        this.istype42 = true;
+                        this.messageMouldTypeOne = 0;
+                        this.fileIdOne = "";
+                    }else{
+                        this.centerImgUrl = require("../../../assets/images1/正文.svg");
+                        this.contentStatus = 102;
+                        this.isContent = false;
+                        this.isBosDisable = true;
+                        this.type = 18;
+                        this.istype18 = true;
+                        this.messageMouldTypeOne = 0;
+                        this.fileIdOne = "";
+                    }
                 } else if (data == 1) {
                     this.centerImgUrl = require("../../../assets/images1/图片.svg");
                     this.contentStatus = 103;
@@ -3009,12 +3192,21 @@ export default {
                 }
             } else {
                 if (data == 0) {
-                    this.centerImgUrl = require("../../../assets/images1/正文.svg");
-                    this.contentStatus = 102;
-                    this.isContent = false;
-                    this.isBosDisable = true;
-                    this.type = 22;
-                    this.istype22 = true;
+                    if(this.msgValue == 3){
+                        this.centerImgUrl = require("../../../assets/images1/正文.svg");
+                        this.contentStatus = 102;
+                        this.isContent = false;
+                        this.isBosDisable = true;
+                        this.type = 43;
+                        this.istype43 = true;
+                    }else{
+                        this.centerImgUrl = require("../../../assets/images1/正文.svg");
+                        this.contentStatus = 102;
+                        this.isContent = false;
+                        this.isBosDisable = true;
+                        this.type = 22;
+                        this.istype22 = true;
+                    }
                 } else {
                     this.$message({
                         type: "warning",
@@ -3234,509 +3426,517 @@ export default {
     },
     mounted () {
         this.status = true;
-        if (this.$route.query.jum == "text") {
-            this.msg = "拖拽文本组件至此";
-            this.handleText();
-            this.msgValue = "0";
-            if (this.$route.query.id) {
-                MessageMould({ messageMouldId: this.$route.query.id })
-                    .then((res) => {
-                        if(res.data.data.checkStatus){
-                            if(res.data.data.checkStatus == 1){
-                                this.checkStatus = 1
-                            }
-                        }
-                        //1.0消息
-                        if (res.data.data.fallbackDTO) {
-                            this.oneId = res.data.data.fallbackDTO.id;
-                            if (res.data.data.fallbackDTO.messageMouldType == 0) {
-                                this.form.descOne = res.data.data.fallbackDTO.content;
-                                this.istype18 = true;
-                            } else {
-                                this.fileIdOne = res.data.data.fallbackDTO.fileGroupDetail.id;
-                                this.messageMouldTypeOne = 1;
-                                if (res.data.data.fallbackDTO.fileGroupDetail.fileType == 1) {
-                                    this.istype19 = true;
-                                    this.imageUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textImgUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textImgTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                } else if (
-                                    res.data.data.fallbackDTO.fileGroupDetail.fileType == 2
-                                ) {
-                                    this.istype20 = true;
-                                    this.audioUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textAudioUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textAudioTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                } else if (
-                                    res.data.data.fallbackDTO.fileGroupDetail.fileType == 3
-                                ) {
-                                    this.istype21 = true;
-                                    this.playerOptionsOne.sources[0].src =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textVideoUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textVideoTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                }
-                            }
-                        }
-                        //sms消息
-                        if (res.data.data.smsFallbackDTO) {
-                            this.smsId = res.data.data.smsFallbackDTO.id;
-                            if (res.data.data.smsFallbackDTO.messageMouldType == 0) {
-                                this.form.descSMS = res.data.data.smsFallbackDTO.content;
-                                this.istype22 = true;
-                            }
-                        }
-                        //底部菜单按钮
-                        if (res.data.data.suggestions.length > 0) {
-                            this.buttonList = res.data.data.suggestions;
-                            var json2 = { data: "nihao" };
-                            this.buttonList.map((res, index) => {
-                                if (res.reply) {
-                                    res.title = "回复消息";
-                                    this.arr.push(res);
-                                } else if (
-                                    JSON.stringify(this.buttonList[index]).indexOf(
-                                        JSON.stringify(json2)
-                                    ) > 0
-                                ) {
-                                    res.title = "打开链接";
-                                    this.brr.push(res);
-                                } else {
-                                    res.title = "拨打电话";
-                                    this.crr.push(res);
-                                }
-                            });
-                            this.$nextTick(() => {
-                                this.getText();
-                            });
-                            this.buttonValue = true;
-                            this.isButtonText = false;
-                        }
-                        this.form.id = res.data.data.id;
-                        this.type = 3;
-                        this.handleInput();
-                        this.form.name = res.data.data.name;
-                        this.appValue = res.data.data.enterpriseAccountAppId;
-                        this.channelValue = res.data.data.channelId;
-                        this.businessValue = res.data.data.businessType;
-                        this.form.desc = res.data.data.content;
-                        if (res.data.data.messageFall == 0) {
-                            this.msgBackValue = true;
-                            this.checkList = ["回落到UP1.0", "回落到SMS"];
-                            this.isUP = true;
-                            this.isSMS = true;
-                        } else {
-                            this.msgBackValue = false;
-                        }
-                        this.$nextTick(() => {
-                            this.Num = -1;
-                        });
-                    })
-                    .catch((error) => {
-                        this.$message.error({
-                            message: error,
-                            center: true,
-                        });
-                    });
-            }
-        } else if (this.$route.query.jum == "change") {
-            this.msg = "拖拽文本组件至此";
-            this.handleText();
-            this.msgValue = "3";
-            if (this.$route.query.id) {
-                MessageMould({ messageMouldId: this.$route.query.id })
-                    .then((res) => {
-                        if(res.data.data.checkStatus){
-                            if(res.data.data.checkStatus == 1){
-                                this.checkStatus = 1
-                            }
-                        }
-                        //1.0消息
-                        if (res.data.data.fallbackDTO) {
-                            this.oneId = res.data.data.fallbackDTO.id;
-                            if (res.data.data.fallbackDTO.messageMouldType == 0) {
-                                this.form.descOne = res.data.data.fallbackDTO.content;
-                                this.istype18 = true;
-                            } else {
-                                this.fileIdOne = res.data.data.fallbackDTO.fileGroupDetail.id;
-                                this.messageMouldTypeOne = 1;
-                                if (res.data.data.fallbackDTO.fileGroupDetail.fileType == 1) {
-                                    this.istype19 = true;
-                                    this.imageUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textImgUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textImgTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                } else if (
-                                    res.data.data.fallbackDTO.fileGroupDetail.fileType == 2
-                                ) {
-                                    this.istype20 = true;
-                                    this.audioUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textAudioUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textAudioTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                } else if (
-                                    res.data.data.fallbackDTO.fileGroupDetail.fileType == 3
-                                ) {
-                                    this.istype21 = true;
-                                    this.playerOptionsOne.sources[0].src =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textVideoUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textVideoTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                }
-                            }
-                        }
-                        //sms消息
-                        if (res.data.data.smsFallbackDTO) {
-                            this.smsId = res.data.data.smsFallbackDTO.id;
-                            if (res.data.data.smsFallbackDTO.messageMouldType == 0) {
-                                this.form.descSMS = res.data.data.smsFallbackDTO.content;
-                                this.istype22 = true;
-                            }
-                        }
-                        //底部菜单按钮
-                        if (res.data.data.suggestions.length > 0) {
-                            this.buttonList = res.data.data.suggestions;
-                            var json2 = { data: "nihao" };
-                            this.buttonList.map((res, index) => {
-                                if (res.reply) {
-                                    res.title = "回复消息";
-                                    this.arr.push(res);
-                                } else if (
-                                    JSON.stringify(this.buttonList[index]).indexOf(
-                                        JSON.stringify(json2)
-                                    ) > 0
-                                ) {
-                                    res.title = "打开链接";
-                                    this.brr.push(res);
-                                } else {
-                                    res.title = "拨打电话";
-                                    this.crr.push(res);
-                                }
-                            });
-                            this.$nextTick(() => {
-                                this.getText();
-                            });
-                            this.buttonValue = true;
-                            this.isButtonText = false;
-                        }
-                        this.form.id = res.data.data.id;
-                        this.type = 41;
-                        this.handleInputChange();
-                        this.form.name = res.data.data.name;
-                        this.appValue = res.data.data.enterpriseAccountAppId;
-                        this.channelValue = res.data.data.channelId;
-                        this.businessValue = res.data.data.businessType;
-                        this.form.descChange = res.data.data.content;
-                        if (res.data.data.messageFall == 0) {
-                            this.msgBackValue = true;
-                            this.checkList = ["回落到UP1.0", "回落到SMS"];
-                            this.isUP = true;
-                            this.isSMS = true;
-                        } else {
-                            this.msgBackValue = false;
-                        }
-                        this.$nextTick(() => {
-                            this.Num = -1;
-                        });
-                    })
-                    .catch((error) => {
-                        this.$message.error({
-                            message: error,
-                            center: true,
-                        });
-                    });
-            }
-        } else if (this.$route.query.jum == "file") {
-            this.msgValue = "1";
-            this.msg = "拖拽文件组件至此";
-            this.handleFile();
-            if (this.$route.query.id) {
-                MessageMould({ messageMouldId: this.$route.query.id })
-                    .then((res) => {
-                        if(res.data.data.checkStatus){
-                            if(res.data.data.checkStatus == 1){
-                                this.checkStatus = 1
-                            }
-                        }
-                        //1.0消息
-                        if (res.data.data.fallbackDTO) {
-                            this.oneId = res.data.data.fallbackDTO.id;
-                            if (res.data.data.fallbackDTO.messageMouldType == 0) {
-                                this.form.descOne = res.data.data.fallbackDTO.content;
-                                this.istype18 = true;
-                            } else {
-                                this.fileIdOne = res.data.data.fallbackDTO.fileGroupDetail.id;
-                                this.messageMouldTypeOne = 1;
-                                if (res.data.data.fallbackDTO.fileGroupDetail.fileType == 1) {
-                                    this.istype19 = true;
-                                    this.imageUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textImgUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textImgTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                } else if (
-                                    res.data.data.fallbackDTO.fileGroupDetail.fileType == 2
-                                ) {
-                                    this.istype20 = true;
-                                    this.audioUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textAudioUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textAudioTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                } else if (
-                                    res.data.data.fallbackDTO.fileGroupDetail.fileType == 3
-                                ) {
-                                    this.istype21 = true;
-                                    this.playerOptionsOne.sources[0].src =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textVideoUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textVideoTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                }
-                            }
-                        }
-                        //sms消息
-                        if (res.data.data.smsFallbackDTO) {
-                            this.smsId = res.data.data.smsFallbackDTO.id;
-                            if (res.data.data.smsFallbackDTO.messageMouldType == 0) {
-                                this.form.descSMS = res.data.data.smsFallbackDTO.content;
-                                this.istype22 = true;
-                            }
-                        }
-                        //底部菜单按钮
-                        if (res.data.data.suggestions.length > 0) {
-                            this.buttonList = res.data.data.suggestions;
-                            var json2 = { data: "nihao" };
-                            this.buttonList.map((res, index) => {
-                                if (res.reply) {
-                                    res.title = "回复消息";
-                                    this.arr.push(res);
-                                } else if (
-                                    JSON.stringify(this.buttonList[index]).indexOf(
-                                        JSON.stringify(json2)
-                                    ) > 0
-                                ) {
-                                    res.title = "打开链接";
-                                    this.brr.push(res);
-                                } else {
-                                    res.title = "拨打电话";
-                                    this.crr.push(res);
-                                }
-                            });
-                            this.$nextTick(() => {
-                                this.getText();
-                            });
-                            this.buttonValue = true;
-                            this.isButtonText = false;
-                        }
-                        //文件
-                        getFile({ fileGroupDetailId: res.data.data.fileGroupDetailId })
-                            .then((res) => {
-                                this.fileIdTow = res.data.data.id;
-                                if (res.data.data.fileType == 1) {
-                                    this.type = 8;
-                                    this.istype8 = true;
-                                    this.isBoxTT = true;
-                                    this.imageUrl = res.data.data.fileUrl;
-                                    this.form.textImgUrl = res.data.data.fileUrl;
-                                    this.form.textImgType = res.data.data.fileUploadType;
-                                } else if (res.data.data.fileType == 2) {
-                                    this.type = 9;
-                                    this.istype9 = true;
-                                    this.isBoxTT = true;
-                                    this.audioUrl = res.data.data.fileUrl;
-                                    this.form.textAudioUrl = res.data.data.fileUrl;
-                                    this.form.textAudioType = res.data.data.fileUploadType;
-                                } else if (res.data.data.fileType == 3) {
-                                    this.type = 10;
-                                    this.istype10 = true;
-                                    this.isBoxTT = true;
-                                    this.playerOptions.sources[0].src = res.data.data.fileUrl;
-                                    this.form.textVideoUrl = res.data.data.fileUrl;
-                                    this.form.textVideoType = res.data.data.fileUploadType;
-                                }
-                            })
-                            .catch((error) => {
-                                this.$message.error({
-                                    message: error,
-                                    center: true,
-                                });
-                            });
-                        this.form.id = res.data.data.id;
-                        this.form.name = res.data.data.name;
-                        this.appValue = res.data.data.enterpriseAccountAppId;
-                        this.channelValue = res.data.data.channelId;
-                        this.businessValue = res.data.data.businessType;
-                        if (res.data.data.messageFall == 0) {
-                            this.msgBackValue = true;
-                            this.checkList = ["回落到UP1.0", "回落到SMS"];
-                            this.isUP = true;
-                            this.isSMS = true;
-                        } else {
-                            this.msgBackValue = false;
-                        }
-                        this.$nextTick(() => {
-                            this.Num = -1;
-                        });
-                    })
-                    .catch((error) => {
-                        this.$message.error({
-                            message: error,
-                            center: true,
-                        });
-                    });
-            }
-        } else if (this.$route.query.jum == "card") {
-            this.msgValue = "2";
-            this.msg = "拖拽文件组件至此";
-            this.handleFile();
-            this.isCard = true;
-            this.buttonValue = true;
-            this.isCardShow = true;
-            this.isModuleDisable = true;
-            this.moduleImgUrl = require("../../../assets/icon-14px-模板@1x.png");
-            if (this.$route.query.id) {
-                MessageMould({ messageMouldId: this.$route.query.id })
-                    .then((res) => {
-                        if(res.data.data.checkStatus){
-                            if(res.data.data.checkStatus == 1){
-                                this.checkStatus = 1
-                            }
-                        }
-                        //1.0消息
-                        if (res.data.data.fallbackDTO) {
-                            this.oneId = res.data.data.fallbackDTO.id;
-                            if (res.data.data.fallbackDTO.messageMouldType == 0) {
-                                this.form.descOne = res.data.data.fallbackDTO.content;
-                                this.istype18 = true;
-                            } else {
-                                this.fileIdOne = res.data.data.fallbackDTO.fileGroupDetail.id;
-                                this.messageMouldTypeOne = 1;
-                                if (res.data.data.fallbackDTO.fileGroupDetail.fileType == 1) {
-                                    this.istype19 = true;
-                                    this.imageUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textImgUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textImgTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                } else if (
-                                    res.data.data.fallbackDTO.fileGroupDetail.fileType == 2
-                                ) {
-                                    this.istype20 = true;
-                                    this.audioUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textAudioUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textAudioTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                } else if (
-                                    res.data.data.fallbackDTO.fileGroupDetail.fileType == 3
-                                ) {
-                                    this.istype21 = true;
-                                    this.playerOptionsOne.sources[0].src =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textVideoUrlOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
-                                    this.form.textVideoTypeOne =
-                                        res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
-                                }
-                            }
-                        }
-                        //sms消息
-                        if (res.data.data.smsFallbackDTO) {
-                            this.smsId = res.data.data.smsFallbackDTO.id;
-                            if (res.data.data.smsFallbackDTO.messageMouldType == 0) {
-                                this.form.descSMS = res.data.data.smsFallbackDTO.content;
-                                this.istype22 = true;
-                            }
-                        }
-                        //底部菜单按钮
-                        if (res.data.data.suggestions.length > 0) {
-                            this.buttonList = res.data.data.suggestions;        
-                            var json2 = { data: "nihao" };
-                            this.buttonList.map((res, index) => {
-                                if (res.reply) {
-                                    res.title = "回复消息";
-                                    this.arr.push(res);
-                                } else if (
-                                    JSON.stringify(this.buttonList[index]).indexOf(
-                                        JSON.stringify(json2)
-                                    ) > 0
-                                ) {
-                                    res.title = "打开链接";
-                                    this.brr.push(res);
-                                } else {
-                                    res.title = "拨打电话";
-                                    this.crr.push(res);
-                                }
-                            });
-                            this.$nextTick(() => {
-                                this.getText();
-                            });
-                            this.buttonValue = true;
-                            this.isButtonText = false;
-                        }
-                        this.messageMouldId = res.data.data.id;
-                        this.appValue = res.data.data.enterpriseAccountAppId;
-                        this.channelValue = res.data.data.channelId;
-                        this.form.name = res.data.data.name;
-                        this.businessValue = res.data.data.businessType;
-                        if (res.data.data.messageFall == 0) {
-                            this.msgBackValue = true;
-                            this.checkList = ["回落到UP1.0", "回落到SMS"];
-                            this.isUP = true;
-                            this.isSMS = true;
-                        } else {
-                            this.msgBackValue = false;
-                        }
-                        this.handleCardSet();
-                        this.isBoxTT = true;
-                        this.$nextTick(() => {
-                            this.Num = -1;
-                        });
-                    })
-                    .catch((error) => {
-                        this.$message.error({
-                            message: error,
-                            center: true,
-                        });
-                    });
-            }
-        }
         businessTypeList(["productType", "businessType"]).then((res) => {
-            
-            //
             // this.businessOptions = res.data.data.businessType;
             // this.businessValue = res.data.data.businessType[0].id;
             this.productType = res.data.data.productType[0].id;
         });
-        getBusinessLis({id:1}).then(res=>{
+        getBusinessLis({ id: 1 }).then(res => {
             this.businessOptions = res.data.data;
             this.businessValue = res.data.data[0].id;
         })
-        enterpriseApplist().then(res=>{
+        enterpriseApplist().then(res => {
             this.appOptions = res.data.data;
         })
-        channelList({enterpriseAccountAppId:''}).then(res=>{
+        channelList({ enterpriseAccountAppId: this.appValue, businessTypeConfigId: this.businessValue }).then(res => {
             this.channelOptions = res.data.data;
+        })
+        this.$nextTick(()=>{
+            if (this.$route.query.jum == "text") {
+                this.msg = "拖拽文本组件至此";
+                this.handleText();
+                this.msgValue = "0";
+                if (this.$route.query.id) {
+                    MessageMould({ messageMouldId: this.$route.query.id })
+                        .then((res) => {
+                            if (res.data.data.checkStatus) {
+                                if (res.data.data.checkStatus == 1) {
+                                    this.checkStatus = 1
+                                }
+                            }
+                            //1.0消息
+                            if (res.data.data.fallbackDTO) {
+                                this.oneId = res.data.data.fallbackDTO.id;
+                                if (res.data.data.fallbackDTO.messageMouldType == 0) {
+                                    this.form.descOne = res.data.data.fallbackDTO.content;
+                                    this.istype18 = true;
+                                } else {
+                                    this.fileIdOne = res.data.data.fallbackDTO.fileGroupDetail.id;
+                                    this.messageMouldTypeOne = 1;
+                                    if (res.data.data.fallbackDTO.fileGroupDetail.fileType == 1) {
+                                        this.istype19 = true;
+                                        this.imageUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textImgUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textImgTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    } else if (
+                                        res.data.data.fallbackDTO.fileGroupDetail.fileType == 2
+                                    ) {
+                                        this.istype20 = true;
+                                        this.audioUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textAudioUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textAudioTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    } else if (
+                                        res.data.data.fallbackDTO.fileGroupDetail.fileType == 3
+                                    ) {
+                                        this.istype21 = true;
+                                        this.playerOptionsOne.sources[0].src =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textVideoUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textVideoTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    }
+                                }
+                            }
+                            //sms消息
+                            if (res.data.data.smsFallbackDTO) {
+                                this.smsId = res.data.data.smsFallbackDTO.id;
+                                if (res.data.data.smsFallbackDTO.messageMouldType == 0) {
+                                    this.form.descSMS = res.data.data.smsFallbackDTO.content;
+                                    this.istype22 = true;
+                                }
+                            }
+                            //底部菜单按钮
+                            if (res.data.data.suggestions.length > 0) {
+                                this.buttonList = res.data.data.suggestions;
+                                var json2 = { data: "nihao" };
+                                this.buttonList.map((res, index) => {
+                                    if (res.reply) {
+                                        res.title = "回复消息";
+                                        this.arr.push(res);
+                                    } else if (
+                                        JSON.stringify(this.buttonList[index]).indexOf(
+                                            JSON.stringify(json2)
+                                        ) > 0
+                                    ) {
+                                        res.title = "打开链接";
+                                        this.brr.push(res);
+                                    } else {
+                                        res.title = "拨打电话";
+                                        this.crr.push(res);
+                                    }
+                                });
+                                this.$nextTick(() => {
+                                    this.getText();
+                                });
+                                this.buttonValue = true;
+                                this.isButtonText = false;
+                            }
+                            this.form.id = res.data.data.id;
+                            this.type = 3;
+                            this.handleInput();
+                            this.form.name = res.data.data.name;
+                            this.appValue = res.data.data.enterpriseAccountAppId;
+                            this.channelValue = res.data.data.channelId;
+                            this.businessValue = res.data.data.businessType;
+                            this.form.desc = res.data.data.content;
+                            if (res.data.data.messageFall == 0) {
+                                this.msgBackValue = true;
+                                this.checkList = ["回落到UP1.0", "回落到SMS"];
+                                this.isUP = true;
+                                this.isSMS = true;
+                            } else {
+                                this.msgBackValue = false;
+                            }
+                            this.$nextTick(() => {
+                                this.Num = -1;
+                            });
+                        })
+                        .catch((error) => {
+                            this.$message.error({
+                                message: error,
+                                center: true,
+                            });
+                        });
+                }
+            } else if (this.$route.query.jum == "change") {
+                this.msg = "拖拽文本组件至此";
+                this.handleText();
+                this.msgValue = "3";
+                if (this.$route.query.id) {
+                    MessageMould({ messageMouldId: this.$route.query.id })
+                        .then((res) => {
+                            var offset = 0;
+                            do {
+                                offset = res.data.data.content.indexOf('{ 变量', offset);
+                                if (offset != -1) {
+                                    this.number++;
+                                    offset += '{ 变量'.length;
+                                }
+                            } while (offset != -1)
+                            if (res.data.data.checkStatus) {
+                                if (res.data.data.checkStatus == 1) {
+                                    this.checkStatus = 1
+                                }
+                            }
+                            //1.0消息
+                            if (res.data.data.fallbackDTO) {
+                                this.oneId = res.data.data.fallbackDTO.id;
+                                if (res.data.data.fallbackDTO.messageMouldType == 0) {
+                                    this.form.descChangeOne = res.data.data.fallbackDTO.content;
+                                    this.istype42 = true;
+                                } else {
+                                    this.fileIdOne = res.data.data.fallbackDTO.fileGroupDetail.id;
+                                    this.messageMouldTypeOne = 1;
+                                    if (res.data.data.fallbackDTO.fileGroupDetail.fileType == 1) {
+                                        this.istype19 = true;
+                                        this.imageUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textImgUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textImgTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    } else if (
+                                        res.data.data.fallbackDTO.fileGroupDetail.fileType == 2
+                                    ) {
+                                        this.istype20 = true;
+                                        this.audioUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textAudioUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textAudioTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    } else if (
+                                        res.data.data.fallbackDTO.fileGroupDetail.fileType == 3
+                                    ) {
+                                        this.istype21 = true;
+                                        this.playerOptionsOne.sources[0].src =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textVideoUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textVideoTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    }
+                                }
+                            }
+                            //sms消息
+                            if (res.data.data.smsFallbackDTO) {
+                                this.smsId = res.data.data.smsFallbackDTO.id;
+                                if (res.data.data.smsFallbackDTO.messageMouldType == 0) {
+                                    this.form.descChangeSMS = res.data.data.smsFallbackDTO.content;
+                                    this.istype43 = true;
+                                }
+                            }
+                            //底部菜单按钮
+                            if (res.data.data.suggestions.length > 0) {
+                                this.buttonList = res.data.data.suggestions;
+                                var json2 = { data: "nihao" };
+                                this.buttonList.map((res, index) => {
+                                    if (res.reply) {
+                                        res.title = "回复消息";
+                                        this.arr.push(res);
+                                    } else if (
+                                        JSON.stringify(this.buttonList[index]).indexOf(
+                                            JSON.stringify(json2)
+                                        ) > 0
+                                    ) {
+                                        res.title = "打开链接";
+                                        this.brr.push(res);
+                                    } else {
+                                        res.title = "拨打电话";
+                                        this.crr.push(res);
+                                    }
+                                });
+                                this.$nextTick(() => {
+                                    this.getText();
+                                });
+                                this.buttonValue = true;
+                                this.isButtonText = false;
+                            }
+                            this.form.id = res.data.data.id;
+                            this.type = 41;
+                            this.handleInputChange();
+                            this.form.name = res.data.data.name;
+                            this.appValue = res.data.data.enterpriseAccountAppId;
+                            this.channelValue = res.data.data.channelId;
+                            this.businessValue = res.data.data.businessType;
+                            this.form.descChange = res.data.data.content;
+                            if (res.data.data.messageFall == 0) {
+                                this.msgBackValue = true;
+                                this.checkList = ["回落到UP1.0", "回落到SMS"];
+                                this.isUP = true;
+                                this.isSMS = true;
+                            } else {
+                                this.msgBackValue = false;
+                            }
+                            this.$nextTick(() => {
+                                this.Num = -1;
+                            });
+                        })
+                        .catch((error) => {
+                            this.$message.error({
+                                message: error,
+                                center: true,
+                            });
+                        });
+                }
+            } else if (this.$route.query.jum == "file") {
+                this.msgValue = "1";
+                this.msg = "拖拽文件组件至此";
+                this.handleFile();
+                if (this.$route.query.id) {
+                    MessageMould({ messageMouldId: this.$route.query.id })
+                        .then((res) => {
+                            if (res.data.data.checkStatus) {
+                                if (res.data.data.checkStatus == 1) {
+                                    this.checkStatus = 1
+                                }
+                            }
+                            //1.0消息
+                            if (res.data.data.fallbackDTO) {
+                                this.oneId = res.data.data.fallbackDTO.id;
+                                if (res.data.data.fallbackDTO.messageMouldType == 0) {
+                                    this.form.descOne = res.data.data.fallbackDTO.content;
+                                    this.istype18 = true;
+                                } else {
+                                    this.fileIdOne = res.data.data.fallbackDTO.fileGroupDetail.id;
+                                    this.messageMouldTypeOne = 1;
+                                    if (res.data.data.fallbackDTO.fileGroupDetail.fileType == 1) {
+                                        this.istype19 = true;
+                                        this.imageUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textImgUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textImgTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    } else if (
+                                        res.data.data.fallbackDTO.fileGroupDetail.fileType == 2
+                                    ) {
+                                        this.istype20 = true;
+                                        this.audioUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textAudioUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textAudioTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    } else if (
+                                        res.data.data.fallbackDTO.fileGroupDetail.fileType == 3
+                                    ) {
+                                        this.istype21 = true;
+                                        this.playerOptionsOne.sources[0].src =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textVideoUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textVideoTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    }
+                                }
+                            }
+                            //sms消息
+                            if (res.data.data.smsFallbackDTO) {
+                                this.smsId = res.data.data.smsFallbackDTO.id;
+                                if (res.data.data.smsFallbackDTO.messageMouldType == 0) {
+                                    this.form.descSMS = res.data.data.smsFallbackDTO.content;
+                                    this.istype22 = true;
+                                }
+                            }
+                            //底部菜单按钮
+                            if (res.data.data.suggestions.length > 0) {
+                                this.buttonList = res.data.data.suggestions;
+                                var json2 = { data: "nihao" };
+                                this.buttonList.map((res, index) => {
+                                    if (res.reply) {
+                                        res.title = "回复消息";
+                                        this.arr.push(res);
+                                    } else if (
+                                        JSON.stringify(this.buttonList[index]).indexOf(
+                                            JSON.stringify(json2)
+                                        ) > 0
+                                    ) {
+                                        res.title = "打开链接";
+                                        this.brr.push(res);
+                                    } else {
+                                        res.title = "拨打电话";
+                                        this.crr.push(res);
+                                    }
+                                });
+                                this.$nextTick(() => {
+                                    this.getText();
+                                });
+                                this.buttonValue = true;
+                                this.isButtonText = false;
+                            }
+                            //文件
+                            getFile({ fileGroupDetailId: res.data.data.fileGroupDetailId })
+                                .then((res) => {
+                                    this.fileIdTow = res.data.data.id;
+                                    if (res.data.data.fileType == 1) {
+                                        this.type = 8;
+                                        this.istype8 = true;
+                                        this.isBoxTT = true;
+                                        this.imageUrl = res.data.data.fileUrl;
+                                        this.form.textImgUrl = res.data.data.fileUrl;
+                                        this.form.textImgType = res.data.data.fileUploadType;
+                                    } else if (res.data.data.fileType == 2) {
+                                        this.type = 9;
+                                        this.istype9 = true;
+                                        this.isBoxTT = true;
+                                        this.audioUrl = res.data.data.fileUrl;
+                                        this.form.textAudioUrl = res.data.data.fileUrl;
+                                        this.form.textAudioType = res.data.data.fileUploadType;
+                                    } else if (res.data.data.fileType == 3) {
+                                        this.type = 10;
+                                        this.istype10 = true;
+                                        this.isBoxTT = true;
+                                        this.playerOptions.sources[0].src = res.data.data.fileUrl;
+                                        this.form.textVideoUrl = res.data.data.fileUrl;
+                                        this.form.textVideoType = res.data.data.fileUploadType;
+                                    }
+                                })
+                                .catch((error) => {
+                                    this.$message.error({
+                                        message: error,
+                                        center: true,
+                                    });
+                                });
+                            this.form.id = res.data.data.id;
+                            this.form.name = res.data.data.name;
+                            this.appValue = res.data.data.enterpriseAccountAppId;
+                            this.channelValue = res.data.data.channelId;
+                            this.businessValue = res.data.data.businessType;
+                            if (res.data.data.messageFall == 0) {
+                                this.msgBackValue = true;
+                                this.checkList = ["回落到UP1.0", "回落到SMS"];
+                                this.isUP = true;
+                                this.isSMS = true;
+                            } else {
+                                this.msgBackValue = false;
+                            }
+                            this.$nextTick(() => {
+                                this.Num = -1;
+                            });
+                        })
+                        .catch((error) => {
+                            this.$message.error({
+                                message: error,
+                                center: true,
+                            });
+                        });
+                }
+            } else if (this.$route.query.jum == "card") {
+                this.msgValue = "2";
+                this.msg = "拖拽文件组件至此";
+                this.handleFile();
+                this.isCard = true;
+                this.buttonValue = true;
+                this.isCardShow = true;
+                this.isModuleDisable = true;
+                this.moduleImgUrl = require("../../../assets/icon-14px-模板@1x.png");
+                if (this.$route.query.id) {
+                    MessageMould({ messageMouldId: this.$route.query.id })
+                        .then((res) => {
+                            if (res.data.data.checkStatus) {
+                                if (res.data.data.checkStatus == 1) {
+                                    this.checkStatus = 1
+                                }
+                            }
+                            //1.0消息
+                            if (res.data.data.fallbackDTO) {
+                                this.oneId = res.data.data.fallbackDTO.id;
+                                if (res.data.data.fallbackDTO.messageMouldType == 0) {
+                                    this.form.descOne = res.data.data.fallbackDTO.content;
+                                    this.istype18 = true;
+                                } else {
+                                    this.fileIdOne = res.data.data.fallbackDTO.fileGroupDetail.id;
+                                    this.messageMouldTypeOne = 1;
+                                    if (res.data.data.fallbackDTO.fileGroupDetail.fileType == 1) {
+                                        this.istype19 = true;
+                                        this.imageUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textImgUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textImgTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    } else if (
+                                        res.data.data.fallbackDTO.fileGroupDetail.fileType == 2
+                                    ) {
+                                        this.istype20 = true;
+                                        this.audioUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textAudioUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textAudioTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    } else if (
+                                        res.data.data.fallbackDTO.fileGroupDetail.fileType == 3
+                                    ) {
+                                        this.istype21 = true;
+                                        this.playerOptionsOne.sources[0].src =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textVideoUrlOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUrl;
+                                        this.form.textVideoTypeOne =
+                                            res.data.data.fallbackDTO.fileGroupDetail.fileUploadType;
+                                    }
+                                }
+                            }
+                            //sms消息
+                            if (res.data.data.smsFallbackDTO) {
+                                this.smsId = res.data.data.smsFallbackDTO.id;
+                                if (res.data.data.smsFallbackDTO.messageMouldType == 0) {
+                                    this.form.descSMS = res.data.data.smsFallbackDTO.content;
+                                    this.istype22 = true;
+                                }
+                            }
+                            //底部菜单按钮
+                            if (res.data.data.suggestions.length > 0) {
+                                this.buttonList = res.data.data.suggestions;
+                                var json2 = { data: "nihao" };
+                                this.buttonList.map((res, index) => {
+                                    if (res.reply) {
+                                        res.title = "回复消息";
+                                        this.arr.push(res);
+                                    } else if (
+                                        JSON.stringify(this.buttonList[index]).indexOf(
+                                            JSON.stringify(json2)
+                                        ) > 0
+                                    ) {
+                                        res.title = "打开链接";
+                                        this.brr.push(res);
+                                    } else {
+                                        res.title = "拨打电话";
+                                        this.crr.push(res);
+                                    }
+                                });
+                                this.$nextTick(() => {
+                                    this.getText();
+                                });
+                                this.buttonValue = true;
+                                this.isButtonText = false;
+                            }
+                            this.messageMouldId = res.data.data.id;
+                            this.appValue = res.data.data.enterpriseAccountAppId;
+                            this.channelValue = res.data.data.channelId;
+                            this.form.name = res.data.data.name;
+                            this.businessValue = res.data.data.businessType;
+                            if (res.data.data.messageFall == 0) {
+                                this.msgBackValue = true;
+                                this.checkList = ["回落到UP1.0", "回落到SMS"];
+                                this.isUP = true;
+                                this.isSMS = true;
+                            } else {
+                                this.msgBackValue = false;
+                            }
+                            this.handleCardSet();
+                            this.isBoxTT = true;
+                            this.$nextTick(() => {
+                                this.Num = -1;
+                            });
+                        })
+                        .catch((error) => {
+                            this.$message.error({
+                                message: error,
+                                center: true,
+                            });
+                        });
+                }
+            }
         })
     },
     watch: {

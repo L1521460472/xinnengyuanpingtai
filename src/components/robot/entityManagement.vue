@@ -11,7 +11,7 @@
             <el-button class="addBtn" type="primary" size="small" @click="getTableList(1)">
               <i class="iconfont iconguanbi"></i>
             </el-button>
-            <el-select v-model="appValue" clearable size="small" placeholder="全部" style="width:160px;margin-right:10px;">
+            <el-select v-model="appValue" ref="searchSelect"  @visible-change="isShowSelectOptions" clearable size="small" placeholder="全部" style="width:160px;margin-right:10px;">
               <el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id">
               </el-option>
             </el-select>
@@ -348,6 +348,10 @@ export default {
     handleSelectionChange(val) {
       this.isDisable = val.length > 0 ? false : true
       this.multipleSelection = val
+    },
+    // 头部搜索下拉框选中后失焦防止回车触发下拉框
+    isShowSelectOptions(isShowSelectOptions){
+      if(!isShowSelectOptions) this.$refs.searchSelect.blur();
     },
     keyDown(e) {
       if (e.keyCode == 13) {

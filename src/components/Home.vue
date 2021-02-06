@@ -108,7 +108,7 @@ export default {
   data() {
     return {
       isCollapse: false,
-      openeds_value: ['/homeIndex', '/message', '/robot', '/account', '/development','/setting','/baseSeeting'], //一进入就打开的菜单
+      openeds_value: ['/homeIndex', '/message', '/robot', '/account', '/development','/setting','/baseSeeting','/addressBook','/statistical'], //一进入就打开的菜单
       username: sessionStorage.getItem("loginName") || '账号管理',
       menuItems: [],
       btnList: []

@@ -11,7 +11,7 @@
             <el-button class="addBtn" type="primary" size="small" @click="getTableList(1)">
               <i class="iconfont iconguanbi"></i>
             </el-button>
-            <el-select v-model="value" clearable size="small" placeholder="全部" style="width:160px;margin-right:10px;">
+            <el-select v-model="value" ref="searchSelect"  @visible-change="isShowSelectOptions" clearable size="small" placeholder="全部" style="width:160px;margin-right:10px;">
               <el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id">
               </el-option>
             </el-select>
@@ -77,7 +77,7 @@
                   <span style="padding: 30px">是否禁用意图？</span>
                   <div class="group-footer">
                     <el-button size="mini" type="primary" @click="handleDisabled(scope.row, scope)">确定</el-button>
-                    <el-button size="mini" @click="cancleDeleteVideoFile(scope)">取消</el-button>
+                    <el-button size="mini" @click="cancleDeleteVideoFile1(scope)">取消</el-button>
                   </div>
                   <el-button type="text" style="padding: 0" slot="reference" v-has="'messageMouldDeleteById'">
                     <img src="../../assets/images1/icon_24px_禁用.svg" />
@@ -89,7 +89,7 @@
                   <span style="padding: 30px">是否启用意图？</span>
                   <div class="group-footer">
                     <el-button size="mini" type="primary" @click="handleDisabled(scope.row, scope)">确定</el-button>
-                    <el-button size="mini" @click="cancleDeleteVideoFile(scope)">取消</el-button>
+                    <el-button size="mini" @click="cancleDeleteVideoFile1(scope)">取消</el-button>
                   </div>
                   <el-button type="text" style="padding: 0" slot="reference" v-has="'messageMouldDeleteById'">
                     <img src="../../assets/images1/icon_24px_启用.svg" />
@@ -98,7 +98,7 @@
               </el-tooltip>
               <el-tooltip class="item" effect="dark" content="删除" placement="bottom" v-has="'intentionDelete'">
                 <el-popover placement="bottom" width="200" :ref="`deleteVideo-${scope.$index}`" trigger="click">
-                  <span style="padding: 30px">是否删除该实体？</span>
+                  <span style="padding: 30px">是否删除该意图？</span>
                   <div class="group-footer">
                     <el-button size="mini" type="primary" @click="handleDelete(scope.row, scope)">确定</el-button>
                     <el-button size="mini" @click="cancleDeleteVideoFile(scope)">取消</el-button>
@@ -180,6 +180,7 @@ export default {
       radio: '1',
       tableData: [],
       form: {
+        id:'',
         name: '',
         robot: '',
         corpus: '',
@@ -194,12 +195,13 @@ export default {
         ],
       },
       rules: {
-        name: [{ required: true, message: '请输入实体名称', trigger: 'blur' }],
+        name: [{ required: true, message: '请输入意图名称', trigger: 'blur' }],
         robot: [
-          { required: true, message: '请输入实体内容', trigger: 'change' },
+          { required: true, message: '请选择机器人', trigger: 'change' },
         ],
-        corpus: [{ required: true, message: '请输入应用', trigger: 'blur' }],
-        answer: [{ required: true, message: '请输入应用', trigger: 'blur' }],
+        corpus: [{ required: true, message: '请输入语料', trigger: 'blur' }],
+        answer: [{ required: true, message: '请输入回答', trigger: 'blur' }],
+        
       },
       options: [],
       robotOptions: [],
@@ -259,6 +261,7 @@ export default {
             this.type = 0
             this.form.answer = res.data.data.answer
           }
+          this.form.id = res.data.data.id
           this.form.name = res.data.data.name
           this.form.robot = res.data.data.robotId
           this.form.corpus = res.data.data.corpus
@@ -325,6 +328,7 @@ export default {
               answer: this.form.answer,
               corpus: this.form.corpus,
               keyWord: this.form.keyWord,
+              id: this.form.id,
               name: this.form.name,
               robotId: this.form.robot,
               status: this.isSwitch ? 0 : 1,
@@ -396,7 +400,7 @@ export default {
         })
     },
     handleDeleteAll() {
-      this.$confirm('确定删除选中的实体吗？', {
+      this.$confirm('确定删除选中的意图吗？', {
         cancelButtonText: '取 消',
         confirmButtonText: '确 定',
         confirmButtonClass: 'btn-custom-confirm',
@@ -461,7 +465,7 @@ export default {
       scope._self.$refs[`deleteVideo-${scope.$index}`].doClose()
     },
     // 取消禁用启用
-    cancleDeleteVideoFile(scope) {
+    cancleDeleteVideoFile1(scope) {
       scope._self.$refs[`statusVideo-${scope.$index}`].doClose()
     },
     handleSelectionChange(val) {
@@ -501,6 +505,10 @@ export default {
             center: true,
           })
         })
+    },
+    // 头部搜索下拉框选中后失焦防止回车触发下拉框
+    isShowSelectOptions(isShowSelectOptions){
+      if(!isShowSelectOptions) this.$refs.searchSelect.blur();
     },
     keyDown(e) {
       if (e.keyCode == 13) {

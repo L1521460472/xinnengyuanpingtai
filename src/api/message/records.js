@@ -46,8 +46,8 @@ export const sendBatch = (params) => {
 export const channelLists = (params) => {
   return request({
     url: '/enterprise-business-service/channel/listByEnterpriseAccountId',
-    method: 'post',
-    data: params
+    method: 'get',
+    params: params
   })
 }
 
@@ -105,5 +105,14 @@ export const exportExcel = (params) => {
     method: 'post',
     data: params,
     responseType: 'blob'
+  })
+}
+
+// 消息批次删除
+export const deleteBatch = (params) => {
+  return request({
+    url: '/enterprise-business-service/messageRecord/batchDelete',
+    method: 'post',
+    data: params
   })
 }

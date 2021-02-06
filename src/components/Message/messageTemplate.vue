@@ -141,7 +141,10 @@
                   </el-popover>
                 </el-tooltip>
                 <el-tooltip class="item" effect="dark" content="发送" placement="bottom">
-                  <el-button @click.native.prevent="handleSend(scope.row)" type="text" size="small" v-has="'messageMouldSendMouldMessage'">
+                  <el-button @click.native.prevent="handleSend(scope.row)" type="text" size="small" v-has="'messageMouldSendMouldMessage'" v-if="scope.row.checkStatus == 1">
+                    <img src="../../assets/icon-24px-发送@1x.svg" alt="" />
+                  </el-button>
+                  <el-button @click.native.prevent="handleSend(scope.row)" type="text" size="small" v-has="'messageMouldSendMouldMessage'" v-else disabled>
                     <img src="../../assets/icon-24px-发送@1x.svg" alt="" />
                   </el-button>
                 </el-tooltip>
@@ -304,20 +307,20 @@ export default {
           this.appOptions = res.data.data
         })
         .catch((err) => {
-          this.$message.error({
-            message: err,
-            center: true,
-          })
+        //   this.$message.error({
+        //     message: err,
+        //     center: true,
+        //   })
         })
-      channelList({ enterpriseAccountAppId: '' })
+      channelList({ enterpriseAccountAppId: '',businessTypeConfigId:'' })
         .then((res) => {
           this.channelOptions = res.data.data
         })
         .catch((err) => {
-          this.$message.error({
-            message: err,
-            center: true,
-          })
+        //   this.$message.error({
+        //     message: err,
+        //     center: true,
+        //   })
         })
       this.$nextTick(() => {
         businessTypeList({ id: 1 })
@@ -333,10 +336,10 @@ export default {
             }
           })
           .catch((err) => {
-            this.$message.error({
-              message: err,
-              center: true,
-            })
+            // this.$message.error({
+            //   message: err,
+            //   center: true,
+            // })
           })
       })
     },
@@ -350,17 +353,17 @@ export default {
             this.cardNum = res.data.data.CARD
             this.changeNum = res.data.data.VARIABLE
           } else {
-            this.$message.error({
-              message: res.data.message,
-              center: true,
-            })
+            // this.$message.error({
+            //   message: res.data.message,
+            //   center: true,
+            // })
           }
         })
         .catch((err) => {
-          this.$message.error({
-            message: err,
-            center: true,
-          })
+        //   this.$message.error({
+        //     message: err,
+        //     center: true,
+        //   })
         })
     },
     // 条件查询
@@ -421,6 +424,7 @@ export default {
         this.isDisableChange = false
         this.messageType = null
       }
+      this.currentPage = 1
       this.getListData()
     },
     // 下载文件
@@ -481,33 +485,38 @@ export default {
     cancleDeleteVideoFile(scope) {
       scope._self.$refs[`deleteVideo-${scope.$index}`].doClose()
     },
+    //发送
     handleSend(row) {
-        console.log('row: ', row);
-      //发送
-      this.ruleForm.app = ''
-      this.ruleForm.desc = ''
-      this.ruleForm.channelId = row.channelId
-      this.ruleForm.mouldCode = row.mouldCode
-      this.ruleForm.msg = row.mouldName
-      getAppList()
-        .then((res) => {
-          if (res.data.status == 0) {
-            this.appOptions = res.data.data
-          } else {
-            this.$message.error({
-              message: res.data.message,
-              center: true,
-            })
-          }
-        })
-        .catch((err) => {
-          this.$message.error({
-            message: err,
-            center: true,
-          })
-        })
-      this.dialogVisible = true
-      window.removeEventListener('keydown', this.keyDown, false) //移除监听事件
+        this.$router.push({
+            // name: "moreMessages",
+            path: '/moreMessages',
+            query: { mouldId:row.mouldId,app:row.enterpriseAccountAppId,messageType: row.messageType },
+        });
+    //   this.ruleForm.app = ''
+    //   this.ruleForm.desc = ''
+    //   this.ruleForm.channelId = row.channelId
+    //   this.ruleForm.mouldCode = row.mouldCode
+    //   this.ruleForm.app = row.enterpriseAccountAppId
+    //   this.ruleForm.msg = row.mouldName
+    //   getAppList()
+    //     .then((res) => {
+    //       if (res.data.status == 0) {
+    //         this.appOptions = res.data.data
+    //       } else {
+    //         this.$message.error({
+    //           message: res.data.message,
+    //           center: true,
+    //         })
+    //       }
+    //     })
+    //     .catch((err) => {
+    //       this.$message.error({
+    //         message: err,
+    //         center: true,
+    //       })
+    //     })
+    //   this.dialogVisible = true
+    //   window.removeEventListener('keydown', this.keyDown, false) //移除监听事件
     },
     confirmSend() {
       //确认发送

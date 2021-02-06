@@ -39,7 +39,7 @@ export const getFile = (params)=>{
 //业务类型
 export const getBusinessLis = (params)=>{
     return request({
-        url:'/enterprise-base-service/common/queryBusinessListByProductType',
+        url:'/enterprise-business-service/common/queryBusinessListByProductType',
         method:'get',
         params:params
     })
@@ -67,8 +67,8 @@ export const enterpriseApplist = (params)=>{
 export const channelList = (params) => {
     return request({
       url: '/enterprise-business-service/channel/listByEnterpriseAccountId',
-      method: 'post',
-      data: params
+      method: 'get',
+      params: params
     })
 }
 

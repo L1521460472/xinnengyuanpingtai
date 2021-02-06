@@ -11,7 +11,7 @@
             <el-button class="addBtn" type="primary" size="small" @click="getTableList(1)">
               <i class="iconfont iconguanbi"></i>
             </el-button>
-            <el-select v-model="value" clearable size="small" placeholder="全部" style="width:160px;margin-right:10px;">
+            <el-select v-model="value" ref="searchSelect"  @visible-change="isShowSelectOptions" clearable size="small" placeholder="全部" style="width:160px;margin-right:10px;">
               <el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id">
               </el-option>
             </el-select>
@@ -106,7 +106,7 @@ export default {
       this.multipleSelection = val
     },
     handleDeleteAll() {
-      this.$confirm('确定删除选中的实体吗？', {
+      this.$confirm('确定删除选中的调试信息吗？', {
         cancelButtonText: '取 消',
         confirmButtonText: '确 定',
         confirmButtonClass: 'btn-custom-confirm',
@@ -118,7 +118,7 @@ export default {
             ids.push(item.id)
           })
           ids = ids.join()
-          entityDelete({ ids: ids })
+          debugInfoDelete({ ids: ids })
             .then((res) => {
               if (res.data.status == 0) {
                 this.$message({
@@ -146,7 +146,7 @@ export default {
         .catch()
     },
     handleDelete(row, scope) {
-      entityDelete({
+      debugInfoDelete({
         ids: row.id,
       })
         .then((res) => {
@@ -169,6 +169,9 @@ export default {
     // 取消删除
     cancleDeleteVideoFile(scope) {
       scope._self.$refs[`deleteVideo-${scope.$index}`].doClose()
+    },
+    isShowSelectOptions(isShowSelectOptions){
+      if(!isShowSelectOptions) this.$refs.searchSelect.blur();
     },
     keyDown(e) {
       if (e.keyCode == 13) {

@@ -3,7 +3,7 @@
     <div class="title">角色权限</div>
     <div class="content">
       <div class="roleLeft">
-        <div class="addRole">
+        <div class="addRole headerBtnRight">
           <el-button class="addBtn" v-if="roleAddBtn" type="primary" size="small" @click="addRole">
             <i class="iconfont iconxinzeng"></i>
             新增角色
@@ -29,7 +29,7 @@
       <div class="roleRight">
         <div class="header">
           <div class="title2">功能权限</div>
-          <div class="headerBtn">
+          <div class="headerBtn headerBtnRight">
             <el-button v-if="copyBtn"  type="primary" size="small" @click="copyRole">
               <i class="iconfont iconfuzhi"></i>
               复制权限并新建角色

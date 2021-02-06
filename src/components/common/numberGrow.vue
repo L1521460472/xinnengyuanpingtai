@@ -1,4 +1,5 @@
 <template>
+<!-- 数字增长动效组件 -->
   <div class="listMain">
     <span ref="numberGrow" :time="time" :value="value" :vaildNumber="vaildNumber">{{value}}</span>
     <slot class="unit" name="unit"></slot>

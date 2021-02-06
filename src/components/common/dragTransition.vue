@@ -19,11 +19,11 @@
             <span>系统默认</span>
           </template>
           <template v-else>
-            <img src="../assets/icon-修改@1-1x.png" @click="editGroup(index, item.name, item.id)" />
+            <img src="../../assets/icon-修改@1-1x.png" @click="editGroup(index, item.name, item.id)" />
             <el-button slot="reference" type="text" style="padding: 0" @click="deleteGroup(item.id)">
-              <img src="../assets/icon---outlined---action---main---delete-3@1x.png" />
+              <img src="../../assets/icon---outlined---action---main---delete-3@1x.png" />
             </el-button>
-            <img src="../assets/icon-拖拽@1x.png" />
+            <img src="../../assets/icon-拖拽@1x.png" />
           </template>
         </div>
     </div>
@@ -48,7 +48,7 @@
   </div>
 </template>
 <script>
-import { deleteGroups, updateGroup, getGroupByType, updateFile } from '../api/message/media'
+import { deleteGroups, updateGroup, getGroupByType, updateFile } from '../../api/message/media'
 export default {
   name: 'dragTransition',
   props: {
@@ -71,7 +71,7 @@ export default {
     }
   },
   mounted(){
-    // 
+    //
   },
   methods: {
       //
@@ -107,7 +107,7 @@ export default {
       },
       // 键盘回车修改组名
       updateGroupName(index, name, id){
-        // 
+        //
         const query = {
           id: id,
           name: name
@@ -265,7 +265,7 @@ export default {
             data.forEach(item => {
               item.isEdit = false
             })
-            // 
+            //
             this.$emit('change', data)
           }
         })

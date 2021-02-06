@@ -116,7 +116,7 @@
 </template>
 <script>
 import { getConsumption, getMessages } from '../api/homeIndex/index'
-import numberGrow from './numberGrow'
+import numberGrow from './common/numberGrow'
 export default {
     name:'homeIndex',
     components: {

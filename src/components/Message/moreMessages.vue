@@ -11,12 +11,12 @@
           <img src="../../assets/images1/删除1.svg" style="cursor: pointer;" @click="deletePhoneList">
         </div>
         <div class="content-left-button">
-          <el-button type="primary" size="small">
+          <el-button type="primary" size="small" @click="importFiles">
             <i class="iconfont icondaoru"></i>
             导入文件
             <!-- <img src="../../assets/images1/icon_18px_导入.svg" style="width:14px;height:14px">导入文件 -->
           </el-button>
-          <el-button type="primary" size="small">
+          <el-button type="primary" size="small" @click="addressBook">
             <i class="iconfont icontongxunlu"></i>通讯录
             <!-- <img src="../../assets/images1/icon_18px_通迅录.svg" style="width:14px;height:14px">通讯录 -->
           </el-button>
@@ -62,7 +62,7 @@
             <el-input v-model="ruleForm.batchName"></el-input>
           </el-form-item>
           <el-form-item label="应用" prop="app">
-            <el-select v-model="ruleForm.app" clearable placeholder="请选择" @change="selectedApp">
+            <el-select v-model="ruleForm.app"  placeholder="请选择" @change="selectedApp">
               <el-option
                 v-for="item in appOptions"
                 :key="item.value"
@@ -73,7 +73,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="消息模板" prop="msg">
-            <el-select v-model="ruleForm.msg" clearable filterable placeholder="请选择" @change="selectedModule">
+            <el-select v-model="ruleForm.msg" filterable placeholder="请选择" @change="selectedModule">
               <el-option
                 v-for="item in msgOptions"
                 :key="item.value"
@@ -86,7 +86,7 @@
           <!-- <el-form-item label="发送给" prop="desc">
             <el-input type="textarea" v-model="ruleForm.desc" placeholder="每行一个手机号,或者以空格隔开..."></el-input>
           </el-form-item> -->
-          <el-form-item label="可用变量">
+          <el-form-item label="可用变量" v-show="messageType == 3">
             <!-- <div class="variable">
               <span v-for="(item,index) in variableList" :key="index" @click="variableSelect(item)" :class="{'disable': messageType != 3}"> {{item.label}} </span>
             </div> -->
@@ -113,15 +113,41 @@
           </el-form-item>
           <el-form-item label="定时发送">
             <el-checkbox v-model="delivery">启用</el-checkbox><br/>
-            <el-date-picker
+            <!-- <el-date-picker
               :disabled="!delivery"
+              v-show="delivery"
               v-model="ruleForm.timingTime"
               type="datetime"
+              :picker-option="{
+                start: '00:00:00',
+                step: '00:30:00',
+                end: '23:30:00'
+              }"
               placeholder="选择日期时间">
-            </el-date-picker>
+            </el-date-picker> -->
+            <div v-show="delivery" class="time-area">
+              <el-date-picker
+                v-model="ruleForm.timingDate"
+                type="date"
+                format="yyyy-MM-dd"
+                value-format="yyyy-MM-dd"
+                placeholder="选择日期">
+              </el-date-picker>
+              <el-time-select
+                v-model="ruleForm.timingTime"
+                :picker-options="{
+                  start: '00:00',
+                  step: '00:30',
+                  end: '23:30'
+                }"
+                format="HH:mm:ss"
+                value-format="HH:mm:ss"
+                placeholder="选择时间">
+              </el-time-select>
+            </div>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="handleSend" size="small">提交</el-button>
+            <el-button type="primary" @click="handleSend" size="small" v-has="'messageSendMouldMessage'">提交</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -166,7 +192,7 @@
                         {{cardContent.textContent}}
                       </div>
                       <template v-if="cardContent.showButton">
-                        <div class="file-content-button" v-for="(item, index) in cardContent.buttonList" :key="index">{{item.action.displayText}}</div>
+                        <div class="file-content-button" v-for="(item, index) in cardContent.buttonList" :key="index">{{item.displayText}}</div>
                       </template>
                     </div>
                   </div>
@@ -179,6 +205,16 @@
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+          <div class="footer-menu">
+            <div class="menu-top" v-if="hoverMenuList.length > 0">
+              <div class="menu-top-item" v-for="(item, index) in hoverMenuList" :key="index">{{item}}</div>
+            </div>
+            <div class="menu-bottom">
+              <i class="iconfont iconjianpan1 menu-icon"></i>
+              <el-input size="small" placeholder="5G消息" style="margin-right:4px" readonly></el-input>
+              <i class="iconfont iconyuyin menu-icon"></i>
             </div>
           </div>
         </div>
@@ -195,6 +231,143 @@
         <el-button @click="openVisible = false" size="small">取 消</el-button>
       </span>
     </el-dialog>
+    <el-dialog
+      title="导入联系人"
+      :visible.sync="importVisible"
+      width="450px">
+        <el-form label-width="100px" :model="importFormData">
+          <el-form-item label="文件类型:">
+            <el-radio label="1" v-model="importFormData.fileType">Excel 文件</el-radio>
+          </el-form-item>
+          <el-form-item label="个人通讯录:">
+            <el-checkbox v-model="importFormData.checked">自动添加</el-checkbox>
+          </el-form-item>
+          <el-form-item label="所属分组:" class="form-item-tree">
+            <el-tree
+              ref="groupTree"
+              highlight-current
+              :data="treeData"
+              node-key="id"
+              :props="defaultProps"
+              default-expand-all
+              @node-click="selectWhichTree"
+              :current-node-key="selectTreeId2"
+              class="special-tree"
+              >
+            <div class="custom-tree-node1" slot-scope="{ node, data }">
+              <span>{{node.label}}</span>
+              <i class="el-icon-check" style="color: #409eff" v-show="selectTreeId2 == data.id"></i>
+            </div>
+          </el-tree>
+          </el-form-item>
+          <el-form-item label="联系人:">
+            <el-upload
+            ref="importAddress"
+            class="upload-demo"
+            action="#"
+            :on-success="importSuccess"
+            :auto-upload="false"
+            :http-request="importExcelFile"
+            multiple>
+            <el-button size="small" type="primary">点击上传</el-button>
+          </el-upload>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="submitImport" size="small">确 定</el-button>
+            <el-button @click="importVisible = false" size="small">取 消</el-button>
+          </el-form-item>
+        </el-form>
+    </el-dialog>
+    <el-dialog
+      title="选择通讯录"
+      :visible.sync="addressVisible"
+      v-loading="loading1"
+      width="80%">
+        <div class="addressBook-tip">
+          注意：选中上级组别，点击【添加全部】，添加的联系人为全组联系人（包含本组及下属的各个分组）。无需再重复选中下属分组添加联系人。
+        </div>
+        <div class="addressBook-content">
+          <div class="addressBook-content-left">
+            <div class="addressBook-content-left-left">
+              <el-tree
+                :data="treeData"
+                node-key="id"
+                highlight-current
+                :props="defaultProps"
+                default-expand-all
+                :expand-on-click-node="false"
+                :current-node-key="selectTreeId"
+                @node-click="handleNodeClick"></el-tree>
+            </div>
+            <div class="addressBook-content-left-right">
+              <div class="header-button">
+                <el-button-group style="width:30%">
+                  <el-button type="primary" @click="reflesh" size="small">
+                  <i class="iconfont iconshuaxin"></i>
+                </el-button>
+                <el-button type="primary" @click="clearSearch"  size="small">
+                  <i class="iconfont iconguanbi"></i>
+                </el-button>
+                </el-button-group>
+                <el-input size="small" v-model="searchValue" style="width:40%">
+                  <i slot="suffix" class="el-input__icon el-icon-search" @click="getTableList"></i>
+                </el-input>
+              </div>
+              <div>
+                <el-table
+                  :data="addressBookData"
+                  :header-cell-style="{background:'#F5F7FA',color:'#333333'}"
+                  @selection-change="handleSelectionChange"
+                  border
+                  height="320"
+                  size="small">
+                  <el-table-column type="selection" width="50" align="center"></el-table-column>
+                  <!-- <el-table-column label="姓名"></el-table-column>
+                  <el-table-column label="手机号"></el-table-column>
+                  <el-table-column label="所属组"></el-table-column>
+                  <el-table-column label="邮箱"></el-table-column>
+                  <el-table-column label="地区"></el-table-column>
+                  <el-table-column label="VIP身份"></el-table-column> -->
+                  <el-table-column v-for="(item, index) in tableHeadList" show-overflow-tooltip :key="index" :label="item.label" :prop="item.prop"></el-table-column>
+                </el-table>
+              </div>
+              <div class="footer-page">
+                <el-pagination
+                  background
+                  size="small"
+                  layout="prev, pager, next"
+                  @current-change="handPageChange"
+                  :total="page2.total">
+                </el-pagination>
+              </div>
+            </div>
+          </div>
+          <div class="addressBook-content-center">
+            <img style="margin-bottom:10px;cursor: pointer;" src="../../assets/images1/icon_double_right.svg">
+            <el-button size="small" type="primary" @click="addAll">添加全部</el-button>
+            <el-button size="small" type="primary" @click="addSelected">添加已选</el-button>
+          </div>
+          <div class="addressBook-content-right">
+            <div class="right-header-top">
+              <span>添加联系人({{tempPhoneList.length}})</span>
+              <img src="../../assets/images1/icon_18px_delete.svg" @click="removeTempPhoneList" style="cursor: pointer;"/>
+            </div>
+            <div class="right-header-bottom">
+              <div class="phone-list-number" v-for="(item, index) in tempPhoneList" :key="index">
+                <div class="phone-list-number-left">
+                  <img src="../../assets/images1/icon_头像.svg"/>
+                  <span class="phone-style">{{item}}</span>
+                </div>
+                <i class="el-icon-close close-phone" @click="removeThisPhone(index)"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="addressBook-footer">
+          <el-button type="primary" size="small" @click="selectedAddressBook">导 入</el-button>
+          <el-button size="small" @click="addressVisible = false">取 消</el-button>
+        </div>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -202,8 +375,10 @@ import { getAppLists } from '../../api/Develop/myapp'
 import {
   getMessageList,
   sendTempalteMsessage,
+  addressImport
 } from '../../api/message/moreMessage'
 import { MessageMould, MessageMouldCard, cardList, getFile } from '../../api/message/diyMessage'
+import { leftMenu, getTableList, getHeadList   } from '../../api/addressBook/personal'
 import { Loading } from 'element-ui'
 import dayjs from 'dayjs'
 export default {
@@ -218,7 +393,8 @@ export default {
         msg: '',
         desc: '',
         phoneDistinct: false,
-        timingTime: ''
+        timingTime: '',
+        timingDate: '',
       },
       rules: {
         app: [
@@ -238,8 +414,16 @@ export default {
       delivery: false,  // 定时发送
       variableList: [
         {
+          id: '1',
+          label: '姓名'
+        },
+        {
           id: '2',
           label: '手机号'
+        },
+        {
+          id: '3',
+          label: '地址'
         }
       ],
       phoneLists:[],  // 当前页的数据
@@ -261,16 +445,39 @@ export default {
         textContent: '',
         fileUrl: '',
         buttonList: [
-          {
-            displayText: '',
-            urlAction: ''
-          }
         ],
         showButton: false
       },
+      hoverMenuList: [],
       variableMessage: '',  // 变量内容
       btnDisable: false,  // 变量按钮是否可以点击
-      replaceParams: {}
+      replaceParams: {},
+      replaceWhich: 1,
+      importVisible: false, // 导入联系人弹窗控制
+      addressVisible: false, // 选择通讯录弹框控制
+      treeData: [],
+      defaultProps: {
+        children: 'children',
+        label: 'label'
+      },
+      addressBookData: [],  // 通讯录表格数据
+      selectTreeId: null, // 当前选择的树结构id
+      page2: {
+        currentPage: 1,
+        pageSize: 5,
+        total: 0
+      },
+      searchValue: '', // 搜索
+      tableHeadList: [],
+      loading1: false,  // 选择通讯录时的loading
+      mutiData: [],
+      tempPhoneList: [],
+      importFormData: {
+        fileType: false,
+        checked: false
+      },
+      selectTreeId2: '',
+
     };
   },
   computed: {
@@ -281,9 +488,57 @@ export default {
       return this.phoneTotalList.length
     }
   },
+  watch: {
+    msgOptions(){
+      if (Object.keys(this.$route.query).length > 0) {
+        this.messageType = this.$route.query.messageType
+        if (this.msgOptions.length > 0) {
+          this.msgOptions.forEach(item => {
+            const moduleId = item.value.split(' ')[0]
+            if (this.$route.query.mouldId == moduleId) {
+              this.ruleForm.msg = item.value
+            }
+          })
+        }
+      }
+    },
+    appOptions() {
+      if (Object.keys(this.$route.query).length > 0) {
+        if (this.appOptions.length > 0) {
+          // this.ruleForm.app = this.$route.query.app
+          this.appOptions.forEach(item => {
+            if (item.value == this.$route.query.app) {
+              this.ruleForm.app = item.value
+            }
+          })
+        }
+      }
+    },
+    'ruleForm.msg': {
+      handler() {
+        if (this.ruleForm.msg != '') {
+          this.selectedModule(this.ruleForm.msg)
+        }
+      }
+    },
+    'ruleForm.app': {
+      handler() {
+        this.selectedApp(this.ruleForm.app)
+      }
+    },
+    selectTreeId() {
+      this.getTableList()
+    },
+    phoneTotalList() {
+      // console.log(this.phoneTotalList)
+      this.getCurrentList(this.currentPage)
+      // console.log(this.phoneLists)
+    }
+  },
   methods: {
     // 发送模板消息
     handleSend() {
+      const timingTimeTemp = this.ruleForm.timingDate + ' ' + this.ruleForm.timingTime + ':00'
       this.$refs.ruleForm.validate((valid) => {
         if (valid) {
           if (this.phoneTotalList.length == 0) {
@@ -304,6 +559,14 @@ export default {
             })
             return
           }
+          if (this.delivery && this.ruleForm.timingDate == '' && this.ruleForm.timingTime == '') {
+            this.$message({
+              type: 'warning',
+              message: '请先选择定时发送时间！',
+              center: true
+            })
+            return
+          }
           const phoneList = this.phoneTotalList.join(',')
           const query = {
             batchName: this.ruleForm.batchName,
@@ -317,7 +580,7 @@ export default {
             phoneDistinct: this.ruleForm.phoneDistinct,
             sendingMode: 'ACTIVE',
             to: phoneList, // 接收方手机号
-            timingTime: this.ruleForm.timingTime == ''? '' : dayjs(this.ruleForm.timingTime).format("YYYY-MM-DD HH:mm:ss"),
+            timingTime: timingTimeTemp == ' :00'? '' : dayjs(timingTimeTemp).format("YYYY-MM-DD HH:mm:ss"),
             clientCorrelator: '', //用户端关联数据
           }
           this.loading = Loading.service({
@@ -336,6 +599,9 @@ export default {
                   message: '发送成功!',
                   center: true,
                 })
+                this.ruleForm = this.$options.data().ruleForm
+                this.$refs.ruleForm.resetFields()
+                this.delivery = false
               } else {
                 this.$message({
                   type: res.data.status === 2 ? 'warning' : 'error',
@@ -353,7 +619,6 @@ export default {
               })
             })
         } else {
-
           return false;
         }
       })
@@ -371,17 +636,17 @@ export default {
               this.appOptions.push(val)
             })
           } else {
-            this.$message.error({
-              message: res.data.message,
-              center: true,
-            })
+            // this.$message.error({
+            //   message: res.data.message,
+            //   center: true,
+            // })
           }
         })
         .catch((error) => {
-          this.$message.error({
-            message: error,
-            center: true,
-          })
+        //   this.$message.error({
+        //     message: error,
+        //     center: true,
+        //   })
         })
     },
     // 获取消息模板列表
@@ -394,7 +659,6 @@ export default {
       getMessageList(params).then(res => {
         if (res.data.status == 0) {
           const data = res.data.data
-          // console.log(data)
           data.forEach(item => {
             const val = {
               label: item.name,
@@ -421,7 +685,24 @@ export default {
         return
       }
       const regex3 = /\{(.+?)\}/;
-      this.variableMessage = this.variableMessage.replace(regex3, this.phoneTotalList[0])
+      // const str = '{' + val.label + '}'
+      // this.variableMessage = this.variableMessage.replace(regex3, this.phoneTotalList[0])
+      // this.variableMessage  = this.variableMessage.replace(regex3, str)
+      const arr = this.variableMessage.split(regex3)
+      const arr1 = arr.map((item, index) => {
+        if ((index+1) % 2 == 0) {
+          return ' { ' + item + ' } '
+        }
+        else {
+          return item
+        }
+      })
+      if (this.replaceWhich + 2 > arr.length) {
+        this.replaceWhich = 1
+      }
+      arr1[this.replaceWhich] = ' { ' + val.label + ' } '
+      this.replaceWhich += 2
+      this.variableMessage = arr1.join("")
       this.replaceParams = {
         column1: this.phoneTotalList[0]
       }
@@ -513,6 +794,15 @@ export default {
           const data = res.data.data
           this.startTime = data.sendStartTime
           this.endTime = data.sendEndTime
+          this.hoverMenuList = []
+          data.suggestions.forEach(item => {
+            if (item.reply) {
+              this.hoverMenuList.push(item.reply.displayText)
+            }
+            if (item.action) {
+              this.hoverMenuList.push(item.action.displayText)
+            }
+          })
           if (data.enterpriseAccountAppId != null) {
             this.ruleForm.app = data.enterpriseAccountAppId
           }
@@ -522,7 +812,6 @@ export default {
           } else if (data.messageType == 1) {  // 文件消息
             this.messageType = 1
             getFile({fileGroupDetailId: data.fileGroupDetailId}).then((res) => {
-              // console.log(res.data.data)
               if (res.data.status == 0) {
                 const data = res.data.data
                 this.fileContent.fileType = data.fileType
@@ -546,7 +835,14 @@ export default {
                 if (result.suggestions.length > 0) {
                   this.cardContent.showButton = true
                   this.cardContent.fileUrl = result.fileGroupDetail.fileUrl
-                  this.cardContent.buttonList = result.suggestions
+                  result.suggestions.forEach(item => {
+                    if (item.reply) {
+                      this.cardContent.buttonList.push({displayText: item.reply.displayText})
+                    }
+                    if (item.action) {
+                      this.cardContent.buttonList.push({displayText: item.action.displayText})
+                    }
+                  })
                 }
               }
             })
@@ -561,12 +857,19 @@ export default {
             center: true
           })
         }
+      }).catch((error) => {
+        this.$message({
+          type: 'error',
+          message: error,
+          center: true
+        })
       })
     },
     // 选中应用
     selectedApp(val){
       this.appName = this.findAppByid(val)
       this.getMessageLists()
+      this.replaceWhich = 1
     },
     // 根据id匹配应用名称
     findAppByid(id) {
@@ -586,6 +889,185 @@ export default {
     handleCurrentChange(val) {
       this.currentPage = val
       this.getCurrentList(this.currentPage)
+    },
+    // 点击导入文件按钮
+    importFiles(){
+      this.importVisible = true
+    },
+    addressBook() {
+      this.addressVisible = true
+      this.tempPhoneList = []
+      // this.getMenuList()
+      this.getTableHead()
+      this.getTableList()
+    },
+    handleNodeClick(val) {
+      this.selectTreeId = val.id
+    },
+    handleSelectionChange(val) {  // 选择通讯录表格多选事件
+      this.mutiData = val
+      console.log(this.mutiData)
+    },
+    // 格式化树数据
+    formatTreeData(data, tempTreeData){
+      data.forEach(element => {
+        const val = {
+          id: element.id,
+          label: element.name,
+          groupDescription: element.extendData,
+          parentId: element.parentId
+        }
+        tempTreeData.push(val)
+        if (element.children.length > 0) {
+          val.children = []
+          this.formatTreeData(element.children, val.children)
+        }
+      })
+    },
+    // 获取弹窗内通讯录树列表
+    getMenuList() {
+      leftMenu().then(res => {
+        if (res.data.status == 0) {
+          this.treeData = []
+          this.formatTreeData(res.data.data, this.treeData)
+       } else {
+         this.$message({
+           type: 'error',
+           message: res.data.message,
+           center: true
+         })
+       }
+      }).catch(error => {
+        this.$message({
+           type: 'error',
+           message: error,
+           center: true
+         })
+      })
+    },
+    selectWhichTree(val) {
+      this.selectTreeId2 = val.id
+    },
+    handPageChange(val) {
+      this.page2.currentPage = val
+    },
+    // 获取表格数据
+    getTableList() {
+      const query = {
+        currentPage: this.page2.currentPage,
+        pageSize: this.page2.pageSize,
+        enterpriseAddressBookId: this.selectTreeId,
+        value: this.searchValue
+      }
+      getTableList(query).then(res => {
+        if(res.data.status == 0) {
+          const data = res.data.data
+          this.page2.total = data.total
+          this.addressBookData = data.records
+        }
+      }).catch(error => {
+        this.$message({
+          type:'error',
+          message: error,
+          center: true
+        })
+      })
+    },
+    // 刷新
+    reflesh() {
+      this.getTableList()
+    },
+    // 清空搜素条件
+    clearSearch() {
+      this.searchValue = ''
+    },
+    // 获取表头数据
+    getTableHead(){
+      this.loading1 = true
+      this.tableHeadList = []
+      getHeadList().then(res => {
+        if (res.data.status == 0) {
+          const data = res.data.data
+          data.forEach(item => {
+            const val = {
+              label: item.fieldName,
+              prop: item.id+''
+            }
+            if (item.showFlag) {
+              this.tableHeadList.push(val)
+            }
+          })
+        }
+        this.loading1 = false
+      }).catch(error => {
+        this.$message({
+          type: 'success',
+          message: error,
+          center: true
+        })
+        this.loading1 = false
+      })
+    },
+    addAll() {
+      this.tempPhoneList = this.addressBookData.map(item => {
+        return item[1]
+      })
+    },
+    addSelected() {
+      this.tempPhoneList = this.mutiData.map(item => {
+        return item[1]
+      })
+    },
+    removeTempPhoneList() {
+      this.tempPhoneList = []
+    },
+    selectedAddressBook() {
+      this.phoneTotalList.push(...this.tempPhoneList)
+      this.addressVisible = false
+    },
+    removeThisPhone(index){
+      this.tempPhoneList.splice(index, 1)
+    },
+    importSuccess() {
+
+    },
+    importExcelFile(file) {
+      const formData = new FormData()
+      formData.append('file', file.file)
+      formData.append('autoAddFlag', this.importFormData.checked)
+      formData.append('addressBookId', this.selectTreeId2)
+      addressImport(formData).then(res => {
+        if (res.data.status == 0) {
+          // console.log(res.data.data)
+          this.phoneTotalList = res.data.data.phoneList
+          this.importVisible = false
+          this.importFormData.checked = false
+          this.selectTreeId2 = ''
+        } else {
+          this.$message({
+            type: 'error',
+            message: res.data.message,
+            center: true
+          })
+        }
+      }).catch(error => {
+        this.$message({
+          type: 'error',
+          message: error,
+          center: true
+        })
+      })
+    },
+    submitImport() {
+      if (this.selectTreeId2 == '') {
+        this.$message({
+          type: 'warning',
+          message: '请先选择分组！',
+          center: true
+        })
+        return
+      }
+      this.$refs.importAddress.submit()
     }
   },
   created() {
@@ -594,6 +1076,7 @@ export default {
   },
   mounted() {
     this.getCurrentList(this.currentPage)
+    this.getMenuList()
   }
 }
 </script>
@@ -719,6 +1202,11 @@ export default {
       // border-radius: 5px;
       padding: 0 17px 20px 17px;
       box-sizing: border-box;
+      .time-area{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
       .demo-ruleForm{
         margin-top: 10px;
       }
@@ -753,7 +1241,7 @@ export default {
       .content-right-body{
         width: 350px;
         margin-top: 10px;
-        height: 100%;
+        height: 600px;
         background-image: url("../../assets/images1/Silver1.png");
         background-repeat: no-repeat;
         // background-size: contain;
@@ -778,6 +1266,8 @@ export default {
           .message-content{
             margin-top: 12px;
             width: 100%;
+            max-height: 300px;
+            overflow-y: scroll;
             .top{
               display: flex;
               align-items: center;
@@ -801,6 +1291,7 @@ export default {
                 overflow: hidden;
                 img{
                   width: 100%;
+                  max-height: 200px;
                 }
                 .file-content{
                   padding: 10px;
@@ -841,7 +1332,133 @@ export default {
           }
 
         }
+        .footer-menu{
+          width: 65%;
+          position: absolute;
+          bottom: 125px;
+          left: 25px;
+          // border: 1px solid #ccc;
+          font-size: 12px;
+          .menu-top{
+            width: 100%;
+            overflow-x: scroll;
+            display: -webkit-box;
+            margin-bottom: 2px;
+            .menu-top-item{
+              padding: 4px 8px;
+              border-radius: 12px;
+              margin-right: 8px;
+              background-color: #eee;
+              color: #409eff;
+            }
+          }
+          .menu-top::-webkit-scrollbar-thumb {
+              border-radius: 10px;
+              background: #fff;
+          }
+          .menu-bottom{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .menu-icon{
+              background-color: #eee;
+              font-size: 24px;
+              border-radius: 50%;
+            }
+          }
+        }
       }
+    }
+  }
+  .addressBook-tip{
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
+  }
+  .addressBook-content{
+
+    display: flex;
+    justify-content: space-around;
+    height: 450px;
+    .addressBook-content-left{
+      width: 70%;
+      height: 100%;
+      display: flex;
+      justify-content: space-around;
+      .addressBook-content-left-left{
+        width: 25%;
+        border: 1px solid #e5e5e5;
+        padding: 10px;
+      }
+      .addressBook-content-left-right{
+        width: 75%;
+        border: 1px solid #e5e5e5;
+        border-left: none;
+        padding: 20px;
+        .header-button{
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        }
+        .footer-page{
+          display: flex;
+          justify-content: center;
+          padding: 10px 0;
+        }
+      }
+    }
+    .addressBook-content-center{
+      width: 10%;
+      height: 100%;
+      // border: 1px solid #e5e5e5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      /deep/ .el-button+.el-button{
+        margin-left: 0;
+        margin-top: 10px;
+      }
+    }
+    .addressBook-content-right{
+      width: 19%;
+      height: 100%;
+      border: 1px solid #e5e5e5;
+      .right-header-top{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+      }
+      .right-header-bottom{
+        color: #333;
+        .phone-list-number{
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px;
+          .phone-list-number-left{
+            display: flex;
+            align-items: center;
+          }
+          .close-phone{
+            cursor: pointer;
+            display: none;
+          }
+        }
+        .phone-list-number:hover i{
+          display: block;
+        }
+      }
+    }
+  }
+  .addressBook-footer{
+    padding: 20px 0 0 0;
+    text-align: center;
+  }
+  .form-item-tree{
+    /deep/ .el-form-item__content{
+      margin-top: 7px;
     }
   }
   /deep/.el-dialog__header{

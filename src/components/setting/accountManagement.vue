@@ -48,7 +48,7 @@
             <el-button class="addBtn" type="primary" size="small"  @click="reset">
               <i class="iconfont iconguanbi"></i>
             </el-button>
-            <el-select v-model="roleId" clearable size="small" placeholder="角色">
+            <el-select v-model="roleId" ref="searchSelect"  @visible-change="isShowSelectOptions" clearable size="small" placeholder="角色">
               <el-option
                 v-for="item in roleList"
                 :key="item.id"
@@ -696,7 +696,7 @@ export default {
           })
         })
         .catch(() => {
-          
+
         });
     },
     // 新增修改账户时获取应用列表
@@ -753,7 +753,7 @@ export default {
               .then(()=>{
                 this.$router.push('/userInformation')
               }).catch(()=>{
-                
+
               })
           }
         }else{
@@ -934,7 +934,7 @@ export default {
           })
         })
         .catch(() => {
-          
+
         });
 
     },
@@ -989,7 +989,7 @@ export default {
           })
         })
         .catch(() => {
-          
+
         });
     },
     // 启用账号
@@ -1147,6 +1147,10 @@ export default {
     handleCurrentChange(val) {
       this.currentPage = val;
       this.getDataList()
+    },
+    // 头部搜索下拉框选中后失焦防止回车触发下拉框
+    isShowSelectOptions(isShowSelectOptions){
+      if(!isShowSelectOptions) this.$refs.searchSelect.blur();
     },
     getTreeData(data) {
       for (var i = 0; i < data.length; i++) {

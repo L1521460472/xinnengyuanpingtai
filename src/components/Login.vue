@@ -51,7 +51,7 @@ import md5 from 'js-md5'
 import { Login } from '../api/homeIndex/login'
 import { getCookie, setCookie, removeCookie } from '../public'
 import { getLimitMenus } from '../api/setting/menu'
-import verificationCode from './verificationCode'
+import verificationCode from './common/verificationCode'
 import { Loading } from 'element-ui'
 export default {
   name: 'Login',
@@ -108,6 +108,7 @@ export default {
                   setCookie('enterpriseToken', res.data.data.token, 1 / 3)
                   setCookie('enterpriseName', res.data.data.userName, 1 / 3)
                   setCookie('enterpriseId', res.data.data.accountId, 1 / 3)
+                  setCookie('companyName', res.data.data.enterpriseName, 1 / 3)
                   sessionStorage.setItem('loginName', this.ruleForm.username)
                   getLimitMenus()
                     .then((res) => {

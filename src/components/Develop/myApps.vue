@@ -2,7 +2,7 @@
   <div id="myApps">
     <div class="title">我的应用</div>
     <div class="container">
-      <div class="headerBtn">
+      <div class="headerBtn headerBtnRight">
         <el-button type="primary" size="small" v-has="'appAdd'"  @click="createAction">
           <i class="iconfont iconxinzeng"></i>
           创建应用
@@ -31,16 +31,16 @@
               <el-form-item label="App Secrect：">
                 <span>{{ props.row.appSecrect }}</span>
               </el-form-item>
-              <el-form-item label="业务权限：">
+              <el-form-item label="业务权限：" class="form-center">
                 <div>
                   <el-tree
                     :data="props.row.temp2"
                     show-checkbox
                     ref="tree"
-                    default-expand-all
                     getCheckedNodes
                     node-key="id"
-                    style="background-color:#F8F8FB"
+                    style="background-color:#F8F8FB;"
+                    :default-expand-all="false"
                     :default-checked-keys="props.row.checkedList"
                     :props="defaultProps">
                   </el-tree>
@@ -63,10 +63,10 @@
         <el-table-column  label="操作" width="100" show-overflow-tooltip>
           <template slot-scope="scope">
             <el-tooltip class="item" effect="dark" content="修改" placement="top">
-              <img class="operation" @click="editAction(scope.row)" src="../../assets/images/edit_icon.svg" alt="">
+              <img class="operation" @click="editAction(scope.row)" src="../../assets/images/edit_icon.svg" v-has="'appUpdate'">
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="删除" placement="top">
-              <img class="operation" @click="deleteAction(scope.row)"  src="../../assets/images/delete_icon.svg" alt="">
+              <img class="operation" @click="deleteAction(scope.row)"  src="../../assets/images/delete_icon.svg" v-has="'appDelete'">
             </el-tooltip>
           </template>
         </el-table-column>
@@ -246,7 +246,10 @@ export default {
         center:true
       })
         .then(() => {
-          deleteAppliction(row.id).then(res => {
+          const query = {
+            enterpriseAccountAppIds: row.id
+          }
+          deleteAppliction(query).then(res => {
             if (res.data.status == 0) {
               this.$message({
                 type: 'success',
@@ -282,14 +285,19 @@ export default {
         center:true
       })
       .then(() => {
-        this.selectValue.forEach(item => {
-          deleteAppliction(item.id).then(res => {
+        const arr = this.selectValue.map(item => {
+          return item.id
+        })
+        const query = {
+          enterpriseAccountAppIds: arr.join(',')
+        }
+        deleteAppliction(query).then(res => {
             if (res.data.status == 0) {
-              // this.$message({
-              //   type: 'success',
-              //   message: '删除成功！',
-              //   center: true
-              // })
+              this.$message({
+                type: 'success',
+                message: '删除成功！',
+                center: true
+              })
               this.getDataList()
             } else {
               this.$message({
@@ -299,12 +307,11 @@ export default {
               })
             }
           }).catch(error => {
-            this.$message({
-                type: 'error',
-                message: error,
-                center: true
-              })
-          })
+          this.$message({
+              type: 'error',
+              message: error,
+              center: true
+            })
         })
       })
       .catch()
@@ -321,22 +328,10 @@ export default {
               })
               return
             }
-            const nodes = this.$refs.tree.getCheckedNodes()
-            // let arr = []
-            // this.$nextTick(() => {
-            //   const nodes = this.$refs.tree.getCheckedNodes()
-            //   if (nodes.length == 0) {
-            //     this.$message({
-            //       type: 'warning',
-            //       message: '请先选择业务权限！',
-            //       center: true
-            //     })
-            //     return
-            //   }
-            //   arr = nodes.map(item => {
-            //     return item.id
-            //   })
-            // })
+            let nodes = []
+            if (this.$refs.tree) {
+              nodes = this.$refs.tree.getCheckedNodes()
+            }
             if (nodes.length == 0) {
               this.$message({
                 type: 'warning',
@@ -406,12 +401,10 @@ export default {
     },
     // 确认编辑
     confirmEdit(){
-      const nodes = this.$refs.tree.getCheckedNodes()
-      // const arr = nodes.map(item => {
-      //   if (item.children.length == 0) {
-      //     return item.id
-      //   }
-      // })
+      let nodes = []
+      if (this.$refs.tree) {
+        nodes = this.$refs.tree.getCheckedNodes()
+      }
       if (nodes.length == 0) {
         this.$message({
           type: 'warning',
@@ -569,6 +562,22 @@ export default {
       }
       return temp
     },
+    // 格式化列表展开数据
+    formatTableExpend(val, temp) {
+      const that = this
+      for(let i = 0; i < val.length; i++) {
+        let temp1 = {}
+        temp1.id = val[i].id
+        temp1.label = val[i].name
+        temp1.disabled = true
+        temp1.children = []
+        if (val[i].children.length > 0) {
+          this.formatTableExpend(val[i].children, temp1.children)
+        }
+        temp.push(temp1)
+      }
+      return temp
+    },
     //
     handleCheckChange(data, checked, indeterminate) {
       console.log(data, checked, indeterminate)
@@ -610,7 +619,7 @@ export default {
       }
       getAppType(query1).then((res) => {
         if (res.data.status == 0) {
-          this.formatArray(res.data.data, row.temp2)
+          this.formatTableExpend(res.data.data, row.temp2)
           this.getAppDetail(row)
         } else {
           this.$message({
@@ -699,6 +708,11 @@ export default {
       justify-content: center;
       box-sizing: border-box;
     }
+    .form-center{
+      /deep/ .el-form-item__content{
+        padding-top: 8px;
+      }
+    }
   }
 }
 
@@ -754,5 +768,11 @@ export default {
 }
 /deep/ .el-button+.el-button{
   margin-left: 3px;
+}
+/deep/ .el-checkbox__input.is-disabled.is-checked .el-checkbox__inner{
+  background-color:#368cfe
+}
+.el-tree /deep/.el-tree-node__expand-icon.is-leaf::before{
+    display: none;
 }
 </style>

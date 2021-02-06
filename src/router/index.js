@@ -56,6 +56,26 @@ const routes = [
         name: 'mediaMaterial',
         component: ()=>import('../components/Message/mediaMaterial.vue')
       },
+      {//统计
+        path: '/statisticalReport',
+        name: 'statisticalReport',
+        component: ()=>import('../components/statistics/statisticalReport.vue'),
+      },
+      {//自定义菜单
+        path: '/customMenu',
+        name: 'customMenu',
+        component: ()=>import('../components/Message/customMenu.vue')
+      },
+      { // 个人通讯录
+        path: '/personalAddressBook',
+        name: 'personalAddressBook',
+        component: () => import('../components/addressBook/personalAddressBook.vue')
+      },
+      { // 通讯录管理
+        path: '/manageAddressBook',
+        name: 'manageAddressBook',
+        component: () => import('../components/addressBook/manageAddressBook.vue')
+      },
       {//我的机器人
         path: '/myrobot',
         name: 'myrobot',

@@ -36,6 +36,26 @@ function regexpName(value) {
   return reg.test(value)
 }
 
+// 菜单名称，关键词
+function regexpMenu(value) {
+  let reg = /^[A-Za-z0-9\u4e00-\u9fa5]+$/gi
+  return reg.test(value)
+}
+
+// 获取字符长度
+function getBLen(str) {
+	if (str == null) return 0;
+	if (typeof str != "string"){
+		str += "";
+	}
+	return str.replace(/[^\x00-\xff]/g,"01").length;
+}
+
+// 菜单链接地址
+function regexpUrl(value) {
+  let reg = /(http|https):\/\/([\w.]+\/?)\S*/ig
+  return reg.test(value)
+}
 
 //移除cookie
 function removeCookie(key) {
@@ -84,6 +104,9 @@ module.exports = {
   regexpAccount,
   regexpPassword,
   regexpName,
+  regexpMenu,
+  regexpUrl,
+  getBLen,
   getButtonList,
   download
 }

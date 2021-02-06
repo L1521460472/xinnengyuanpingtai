@@ -18,3 +18,13 @@ export const sendTempalteMsessage = (params) => {
     data: params
   })
 }
+
+
+// 通讯录导入
+export const addressImport = (params) => {
+  return request({
+    url: '/enterprise-business-service/message/addressBook/import',
+    method: 'post',
+    data: params
+  })
+}

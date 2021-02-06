@@ -322,7 +322,7 @@
               width="30%">
               <el-form label-width="80px">
                 <el-form-item label="选择应用">
-                  <el-select v-model="appId" size="small" placeholder="请选择应用">
+                  <el-select v-model="appId2" size="small" placeholder="请选择应用">
                     <el-option
                       v-for="item in appOptions"
                       :key="item.value"
@@ -332,7 +332,7 @@
                   </el-select>
                 </el-form-item>
                 <el-form-item label="选择通道">
-                  <el-select v-model="channel" size="small" placeholder="请选择通道">
+                  <el-select v-model="channel2" size="small" placeholder="请选择通道">
                     <el-option
                       v-for="item in channelList"
                       :key="item.value"
@@ -550,7 +550,7 @@
   </div>
 </template>
 <script>
-import typeGroup from '../typeGroup'
+import typeGroup from '../common/typeGroup'
 import {
   fileGroup,
   getGroupByType,
@@ -823,6 +823,7 @@ export default {
         .then((res) => {
           if (res.data.status == 0) {
             const data = res.data.data
+            console.log(data)
             data.forEach((item) => {
               const val = {}
               val.value = item.id
@@ -887,10 +888,23 @@ export default {
             data.records.forEach((item, index) => {
               item.rowEdit = false
               item.index = index
-              item.channel = that.findAppByid(item.channelId, that.channelList)
-              item.appName = that.findAppByid(item.enterpriseAccountAppId, that.appOptions)
+              that.channelList.forEach(ele => {
+                if (ele.value == item.channelId) {
+                  item.channel = ele.label
+                }
+              })
+              that.appOptions.forEach(ele => {
+                if (ele.value == item.enterpriseAccountAppId) {
+                  item.appName = ele.label
+                }
+              })
+              // item.channel = that.findAppByid(item.channelId, that.channelList)
+              // item.appName = that.findAppByid(item.enterpriseAccountAppId, that.appOptions)
+              item.fileUploadSize = (item.fileUploadSize/1024/1024).toFixed(2) + 'MB'
             })
-            this.tableData = data.records
+            this.$nextTick(() => {
+              this.tableData = data.records
+            })
           } else {
             this.$message({
               type: res.data.status === 2 ? 'warning' : 'error',
@@ -1226,6 +1240,7 @@ export default {
     // 获取音频列表
     getAudioList() {
       this.loading2 = true
+      const that = this
       const query = {
         currentPage: this.page2.currentPage,
         pageSize: this.page2.pageSize,
@@ -1255,6 +1270,9 @@ export default {
             data.records.forEach((item, index) => {
               item.rowEdit = false
               item.index = index
+              item.channel = that.findAppByid(item.channelId, that.channelList)
+              item.appName = that.findAppByid(item.enterpriseAccountAppId, that.appOptions)
+              item.fileUploadSize = (item.fileUploadSize/1024/1024).toFixed(2) + 'MB'
             })
             this.tableData2 = data.records
             // this.getGroupByTypes()
@@ -1597,8 +1615,8 @@ export default {
         this.dialogVisibleAudio = false
         const e = document.createEvent("MouseEvents");
         e.initEvent("click", true, true);
-        const uploadPic  = document.getElementById("uploadAudio")
-        uploadPic.dispatchEvent(e)
+        const uploadAudio  = document.getElementById("uploadAudio")
+        uploadAudio.dispatchEvent(e)
       },
       // 上传音频前的询问事件
       beforeUploadAudio() {
@@ -1608,6 +1626,7 @@ export default {
     // 获取video列表
     getVideoList() {
       this.loading3 = true
+      const that = this
       const query = {
         currentPage: this.page3.currentPage,
         pageSize: this.page3.pageSize,
@@ -1636,6 +1655,9 @@ export default {
           data.records.forEach((item, index) => {
             item.rowEdit = false
             item.index = index
+            item.channel = that.findAppByid(item.channelId, that.channelList)
+            item.appName = that.findAppByid(item.enterpriseAccountAppId, that.appOptions)
+            item.fileUploadSize = (item.fileUploadSize/1024/1024).toFixed(2) + 'MB'
           })
           this.tableData3 = data.records
         } else {
@@ -1960,15 +1982,68 @@ export default {
       // 上传视频前的询问事件
       beforeUploadVideo() {
         this.dialogVisibleVedio = true
+      },
+      async initList(){
+        //   await this.getChannelList()
+        //   await this.getDataList()
+        //   await this.$nextTick(() => {
+        //     this.getPicTableList()
+        //   })
+        // }
+        channelLists().then((res) => {
+          if (res.data.status == 0) {
+            const data = res.data.data
+            data.forEach(item => {
+              this.channelList.push({
+                value: item.id,
+                label: item.name
+              })
+            })
+          } else {
+            this.$message({
+              type: 'error',
+              message: res.data.message,
+              center: true
+            })
+          }
+        })
+        this.$nextTick(() => {
+          getAppLists()
+          .then((res) => {
+            if (res.data.status == 0) {
+              const data = res.data.data
+              // console.log(data)
+              data.forEach((item) => {
+                const val = {}
+                val.value = item.id
+                val.label = item.name
+                this.appOptions.push(val)
+              })
+              this.getPicTableList()
+            } else {
+            //   this.$message.error({
+            //     message: res.data.message,
+            //     center: true,
+            //   })
+            }
+          })
+          .catch((error) => {
+            // this.$message.error({
+            //   message: error,
+            //   center: true,
+            // })
+          })
+        })
+        // await Promise.all([this.getChannelList(), this.getDataList()])
+        // this.getPicTableList()
       }
   },
   mounted() {
     this.getGroupByTypes()
-    this.getPicTableList()
+    this.initList()
   },
   created() {
-    this.getChannelList()
-    this.getDataList()
+    // this.initList()
   }
 }
 </script>
